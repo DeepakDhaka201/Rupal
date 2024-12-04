@@ -52,8 +52,7 @@ def send_otp():
             mobile=mobile,
             is_verified=False
         ).update({
-            'is_verified': True,
-            'error_message': 'Superseded by new OTP'
+            'is_verified': True
         })
 
         db.session.add(new_otp)
