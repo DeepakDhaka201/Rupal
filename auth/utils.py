@@ -26,16 +26,21 @@ def generate_referral_code():
 def send_sms_otp(mobile, otp):
     """Send OTP via SMS"""
     try:
-        # Integrate with your SMS gateway
-        url = "YOUR_SMS_GATEWAY_URL"
-        payload = {
-            "mobile": mobile,
-            "message": f"Your OTP is {otp}. Valid for {current_app.config['OTP_VALIDITY_MINUTES']} minutes."
+
+        message = "Verify+Mobile,+No.+Your+OTP+is+{}+To+Login+in+App+ARNAV".format(otp)
+
+        url = "http://sms.smslab.in/api/sendhttp.php"
+        params = {
+            "authkey": "393055AeJCj8aMhr836419c96fP1",
+            "mobiles": "91" + mobile,
+            "message": message,
+            "sender": "ARVIPT",
+            "route": 4,
+            "country": 91,
+            "DLT_TE_ID": "1307167958154244221"
         }
-        headers = {
-            "Authorization": f"Bearer {current_app.config['SMS_API_KEY']}"
-        }
-        response = requests.post(url, json=payload, headers=headers)
+
+        response = requests.get(url, params=params)
         return response.ok
     except Exception as e:
         current_app.logger.error(f"SMS send error: {str(e)}")
