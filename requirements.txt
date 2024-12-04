@@ -6,7 +6,7 @@ werkzeug==2.3.3
 requests==2.26.0
 tronapi==3.1.6
 python-jose==3.3.0
-pillow==8.3.1
+pillow==9.4.0
 pytest==6.2.5
 PyJWT==2.3.0
 APScheduler==3.8.1
