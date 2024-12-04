@@ -18,18 +18,6 @@ def get_dashboard_summary(current_user):
     and transaction summaries
     """
     try:
-        # Get monthly summary
-        month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
-        monthly_summary = db.session.query(
-            TransactionType,
-            func.count(Transaction.id),
-            func.sum(Transaction.amount_usdt)
-        ).filter(
-            Transaction.user_id == current_user.id,
-            Transaction.status == TransactionStatus.COMPLETED,
-            Transaction.created_at >= month_start
-        ).group_by(TransactionType).all()
-
         # Get recent transactions
         recent_transactions = Transaction.query.filter_by(
             user_id=current_user.id
@@ -43,22 +31,9 @@ def get_dashboard_summary(current_user):
             is_verified=True
         ).all()
 
-        # Format monthly summary
-        monthly_stats = {
-            tx_type.value: {
-                'count': count,
-                'total_amount': float(total or 0)
-            } for tx_type, count, total in monthly_summary
-        }
 
         return jsonify({
             'wallet_balance': current_user.wallet_balance,
-            'monthly_summary': {
-                'buy': monthly_stats.get('BUY', {'count': 0, 'total_amount': 0}),
-                'sell': monthly_stats.get('SELL', {'count': 0, 'total_amount': 0}),
-                'deposit': monthly_stats.get('DEPOSIT', {'count': 0, 'total_amount': 0}),
-                'withdraw': monthly_stats.get('WITHDRAW', {'count': 0, 'total_amount': 0})
-            },
             'recent_transactions': [{
                 'id': tx.id,
                 'rupal_id': tx.rupal_id,
