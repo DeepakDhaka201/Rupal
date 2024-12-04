@@ -4,19 +4,18 @@ from datetime import timedelta
 
 class Config:
     # Basic Flask Config
-    SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///crypto_platform.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Session Config
-    PERMANENT_SESSION_LIFETIME = timedelta(days=1)
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    # JWT Config
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-jwt-secret')
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 
-    # Upload Config
-    UPLOAD_DIR = 'uploads/payment_proofs'
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    # OTP Config
+    OTP_LENGTH = 6
+    OTP_VALIDITY_MINUTES = 10
+    SMS_API_KEY = os.getenv('SMS_API_KEY')
 
     # Transaction Limits
     MIN_BUY_INR = 1000
@@ -25,27 +24,18 @@ class Config:
     MAX_SELL_USDT = 10000
     MIN_WITHDRAWAL_USDT = 10
     MAX_WITHDRAWAL_USDT = 10000
-    BASE_WITHDRAWAL_FEE = 1
 
-    # Bank Details
-    BANK_ACCOUNT_NAME = 'Company Name'
-    BANK_ACCOUNT_NUMBER = '1234567890'
-    BANK_IFSC_CODE = 'ABCD0123456'
-    BANK_NAME = 'Bank Name'
-    BANK_BRANCH = 'Main Branch'
-
-    # Platform Wallet
-    PLATFORM_WALLET_ADDRESS = "THdwjNJM1uYMMCBYWyVPnqX5VffoJARYAh"
-
-    # TRON Network
-    TRON_API_URL = 'https://api.trongrid.io'
+    # Blockchain Config
+    TRON_API_URL = os.getenv('TRON_API_URL', 'https://api.trongrid.io')
+    USDT_CONTRACT_ADDRESS = os.getenv('USDT_CONTRACT_ADDRESS')
+    PLATFORM_WALLET_ADDRESS = os.getenv('PLATFORM_WALLET_ADDRESS')
     MIN_CONFIRMATIONS = 1
 
-    # Referral System
+    # Wallet Pool Config
+    WALLET_ASSIGNMENT_DURATION = 30  # minutes
+    CLEANUP_INTERVAL = 5  # minutes
+
+    # Referral Config
     MAX_REFERRAL_LEVELS = 5
-
-    # OTP Settings
-    OTP_LENGTH = 6
-    OTP_VALIDITY_MINUTES = 10
-
-    BANK_DETAILS = {}
+    DEFAULT_BUY_COMMISSION = 1.0  # percentage
+    DEFAULT_SELL_COMMISSION = 0.5  # percentage

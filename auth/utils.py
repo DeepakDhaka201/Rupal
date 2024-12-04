@@ -1,38 +1,149 @@
 import random
 import string
 from functools import wraps
-from flask import session, redirect, url_for, flash
-import re
+from flask import request, jsonify, current_app
+import jwt
+from datetime import datetime, timedelta
+import requests
+
+from models import db
+from models.models import UserStatus, User, OTP
+
 
 def generate_otp():
+    """Generate 6 digit OTP"""
     return ''.join(random.choices(string.digits, k=6))
 
+
 def generate_referral_code():
-    chars = string.ascii_uppercase + string.digits
-    return ''.join(random.choices(chars, k=8))
+    """Generate unique 8 character referral code"""
+    while True:
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        if not User.query.filter_by(referral_code=code).first():
+            return code
+
 
 def send_sms_otp(mobile, otp):
-    # Implement your SMS gateway integration here
-    print(f"Sending OTP {otp} to {mobile}")
-    return True
+    """Send OTP via SMS"""
+    try:
+        # Integrate with your SMS gateway
+        url = "YOUR_SMS_GATEWAY_URL"
+        payload = {
+            "mobile": mobile,
+            "message": f"Your OTP is {otp}. Valid for {current_app.config['OTP_VALIDITY_MINUTES']} minutes."
+        }
+        headers = {
+            "Authorization": f"Bearer {current_app.config['SMS_API_KEY']}"
+        }
+        response = requests.post(url, json=payload, headers=headers)
+        return response.ok
+    except Exception as e:
+        current_app.logger.error(f"SMS send error: {str(e)}")
+        return False
 
-def login_required(f):
+
+def create_access_token(user_id):
+    """Create JWT token"""
+    expiry = datetime.utcnow() + timedelta(days=1)
+    return jwt.encode(
+        {
+            'user_id': user_id,
+            'exp': expiry,
+            'iat': datetime.utcnow()
+        },
+        current_app.config['JWT_SECRET_KEY'],
+        algorithm='HS256'
+    )
+
+
+def token_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please login to continue', 'error')
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return decorated_function
+    def decorated(*args, **kwargs):
+        token = None
+        auth_header = request.headers.get('Authorization')
+
+        if auth_header:
+            try:
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                return jsonify({'error': 'Invalid token format'}), 401
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(
+                token,
+                current_app.config['JWT_SECRET_KEY'],
+                algorithms=['HS256']
+            )
+            current_user = User.query.get(data['user_id'])
+            if not current_user:
+                return jsonify({'error': 'User not found'}), 401
+            if current_user.status != UserStatus.ACTIVE:
+                return jsonify({'error': 'Account is not active'}), 403
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        return f(current_user, *args, **kwargs)
+
+    return decorated
+
 
 def admin_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please login to continue', 'error')
-            return redirect(url_for('auth.login'))
-        if not session.get('is_admin'):
-            flash('Admin access required', 'error')
-            return redirect(url_for('dashboard.index'))
-        return f(*args, **kwargs)
-    return decorated_function
+    def decorated(*args, **kwargs):
+        token = None
+        auth_header = request.headers.get('Authorization')
+
+        if auth_header:
+            try:
+                token = auth_header.split(" ")[1]
+            except IndexError:
+                return jsonify({'error': 'Invalid token format'}), 401
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            data = jwt.decode(
+                token,
+                current_app.config['JWT_SECRET_KEY'],
+                algorithms=['HS256']
+            )
+            current_user = User.query.get(data['user_id'])
+            if not current_user or not current_user.is_admin:
+                return jsonify({'error': 'Admin access required'}), 403
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        return f(current_user, *args, **kwargs)
+
+    return decorated
+
+
+def cleanup_expired_otps():
+    """Cleanup expired OTPs"""
+    try:
+        expiry_time = datetime.utcnow() - timedelta(
+            minutes=current_app.config['OTP_VALIDITY_MINUTES']
+        )
+
+        # Mark expired OTPs
+        expired_otps = OTP.query.filter(
+            OTP.created_at < expiry_time,
+            OTP.is_verified == False
+        ).all()
+
+        for otp in expired_otps:
+            otp.is_verified = True
+            otp.error_message = 'Expired'
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"OTP cleanup error: {str(e)}")

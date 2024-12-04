@@ -1,90 +1,160 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from models import db, BankAccount
-from auth.utils import login_required, admin_required
+from flask import Blueprint, request, jsonify, current_app
+from models.models import db, BankAccount
+from auth.utils import token_required
+import re
 
 bank_bp = Blueprint('bank', __name__)
 
 
 @bank_bp.route('/accounts', methods=['GET'])
-@login_required
-def list_accounts():
-    accounts = BankAccount.query.filter_by(user_id=session['user_id']).all()
-    return render_template('bank/accounts.html', accounts=accounts)
-
-
-@bank_bp.route('/accounts/add', methods=['GET', 'POST'])
-@login_required
-def add_account():
-    if request.method == 'POST':
-        account_number = request.form.get('account_number')
-        ifsc_code = request.form.get('ifsc_code')
-        account_holder = request.form.get('account_holder')
-        bank_name = request.form.get('bank_name')
-
-        # Basic validation
-        if not all([account_number, ifsc_code, account_holder, bank_name]):
-            flash('All fields are required', 'error')
-            return redirect(url_for('bank.add_account'))
-
-        # IFSC code validation
-        if not ifsc_code.isalnum() or len(ifsc_code) != 11:
-            flash('Invalid IFSC code', 'error')
-            return redirect(url_for('bank.add_account'))
-
-        try:
-            bank_account = BankAccount(
-                user_id=session['user_id'],
-                account_number=account_number,
-                ifsc_code=ifsc_code.upper(),
-                account_holder=account_holder,
-                bank_name=bank_name
-            )
-
-            db.session.add(bank_account)
-            db.session.commit()
-
-            flash('Bank account added successfully', 'success')
-            return redirect(url_for('bank.list_accounts'))
-
-        except Exception as e:
-            db.session.rollback()
-            flash('Error adding bank account', 'error')
-            return redirect(url_for('bank.add_account'))
-
-    return render_template('bank/add_account.html')
-
-
-@bank_bp.route('/accounts/<int:account_id>/delete', methods=['POST'])
-@login_required
-def delete_account(account_id):
-    account = BankAccount.query.filter_by(
-        id=account_id,
-        user_id=session['user_id']
-    ).first_or_404()
-
+@token_required
+def get_accounts(current_user):
+    """Get user's bank accounts"""
     try:
+        accounts = BankAccount.query.filter_by(
+            user_id=current_user.id
+        ).order_by(BankAccount.is_primary.desc()).all()
+
+        return jsonify({
+            'accounts': [{
+                'id': account.id,
+                'bank_name': account.bank_name,
+                'account_holder': account.account_holder,
+                'account_number': account.account_number,
+                'ifsc_code': account.ifsc_code,
+                'is_verified': account.is_verified,
+                'is_primary': account.is_primary
+            } for account in accounts]
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Get bank accounts error: {str(e)}")
+        return jsonify({'error': 'Failed to fetch bank accounts'}), 500
+
+
+@bank_bp.route('/accounts', methods=['POST'])
+@token_required
+def add_account(current_user):
+    """
+    Add new bank account
+    Request: {
+        "bank_name": "Bank Name",
+        "account_holder": "Account Holder Name",
+        "account_number": "Account Number",
+        "ifsc_code": "IFSC Code",
+        "set_primary": boolean (optional)
+    }
+    """
+    try:
+        data = request.get_json()
+        required_fields = ['bank_name', 'account_holder', 'account_number', 'ifsc_code']
+        if not data or not all(field in data for field in required_fields):
+            return jsonify({'error': 'All fields are required'}), 400
+
+        # Validate IFSC code format
+        if not re.match(r'^[A-Z]{4}0[A-Z0-9]{6}$', data['ifsc_code']):
+            return jsonify({'error': 'Invalid IFSC code format'}), 400
+
+        # Check if account already exists
+        existing_account = BankAccount.query.filter_by(
+            user_id=current_user.id,
+            account_number=data['account_number'],
+            ifsc_code=data['ifsc_code']
+        ).first()
+
+        if existing_account:
+            return jsonify({'error': 'Account already exists'}), 400
+
+        # Create new account
+        account = BankAccount(
+            user_id=current_user.id,
+            bank_name=data['bank_name'],
+            account_holder=data['account_holder'],
+            account_number=data['account_number'],
+            ifsc_code=data['ifsc_code'].upper()
+        )
+
+        # Handle primary account setting
+        if data.get('set_primary'):
+            # Remove primary flag from other accounts
+            BankAccount.query.filter_by(
+                user_id=current_user.id,
+                is_primary=True
+            ).update({'is_primary': False})
+            account.is_primary = True
+
+        db.session.add(account)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Bank account added successfully',
+            'account': {
+                'id': account.id,
+                'bank_name': account.bank_name,
+                'account_number': account.account_number,
+                'ifsc_code': account.ifsc_code,
+                'is_primary': account.is_primary
+            }
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Add bank account error: {str(e)}")
+        return jsonify({'error': 'Failed to add bank account'}), 500
+
+
+@bank_bp.route('/accounts/<int:account_id>', methods=['DELETE'])
+@token_required
+def delete_account(current_user, account_id):
+    """Delete bank account"""
+    try:
+        account = BankAccount.query.filter_by(
+            id=account_id,
+            user_id=current_user.id
+        ).first_or_404()
+
         db.session.delete(account)
         db.session.commit()
-        flash('Bank account deleted successfully', 'success')
-    except:
+
+        return jsonify({
+            'message': 'Bank account deleted successfully'
+        }), 200
+
+    except Exception as e:
         db.session.rollback()
-        flash('Error deleting bank account', 'error')
+        current_app.logger.error(f"Delete bank account error: {str(e)}")
+        return jsonify({'error': 'Failed to delete bank account'}), 500
 
-    return redirect(url_for('bank.list_accounts'))
 
-
-# Bank account verification route (for admin)
-@bank_bp.route('/admin/accounts/verify/<int:account_id>', methods=['POST'])
-@admin_required
-def verify_account(account_id):
-    account = BankAccount.query.get_or_404(account_id)
-
+@bank_bp.route('/accounts/<int:account_id>/primary', methods=['POST'])
+@token_required
+def set_primary_account(current_user, account_id):
+    """Set account as primary"""
     try:
-        account.is_verified = True
-        db.session.commit()
-        flash('Bank account verified successfully', 'success')
-    except:
-        db.session.rollback()
-        flash('Error verifying bank account', 'error')
+        account = BankAccount.query.filter_by(
+            id=account_id,
+            user_id=current_user.id
+        ).first_or_404()
 
-    return redirect(url_for('admin.bank_accounts'))
+        # Remove primary flag from other accounts
+        BankAccount.query.filter_by(
+            user_id=current_user.id,
+            is_primary=True
+        ).update({'is_primary': False})
+
+        account.is_primary = True
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Primary account updated successfully',
+            'account': {
+                'id': account.id,
+                'bank_name': account.bank_name,
+                'account_number': account.account_number
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Set primary account error: {str(e)}")
+        return jsonify({'error': 'Failed to update primary account'}), 500
