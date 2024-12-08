@@ -206,7 +206,7 @@ def get_deposit_address(current_user):
             return jsonify({'error': 'No deposit addresses available'}), 503
 
         # Create assignment
-        expires_at = datetime.utcnow() + timedelta(minutes=30)
+        expires_at = datetime.utcnow() + timedelta(minutes=6)
         assignment = WalletAssignment(
             wallet_id=wallet.id,
             user_id=current_user.id,
@@ -230,10 +230,14 @@ def get_deposit_address(current_user):
         db.session.add(assignment)
         db.session.commit()
 
+        qr_url = TransactionUtil.generate_address_qr(wallet.address)
+
         return jsonify({
             'wallet': {
                 'address': wallet.address,
-                'expires_at': expires_at.isoformat()
+                'expires_at': expires_at.isoformat(),
+                'expire_after': 6*60*1000,
+                'qr': qr_url,
             },
             'qr_data': f'tron:{wallet.address}',
             'transaction_id': transaction_id

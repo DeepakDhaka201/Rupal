@@ -2,10 +2,12 @@ import os
 import re
 import string
 import random
+import uuid
 
+import qrcode
 import requests
 from datetime import datetime, timedelta
-from flask import current_app
+from flask import current_app, url_for
 
 from werkzeug.utils import secure_filename
 
@@ -272,3 +274,50 @@ class TransactionUtil:
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Commission processing error: {str(e)}")
+
+    @staticmethod
+    def generate_address_qr(address, size=300):
+        """
+        Generate QR code image for USDT address
+        Returns URL path of saved QR image
+        """
+        try:
+            # Generate unique filename
+            filename = f"qr_{uuid.uuid4().hex}.png"
+
+            # Create QR code instance
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+
+            # Add USDT address data
+            qr_data = f"tron:{address}"
+            qr.add_data(qr_data)
+            qr.make(fit=True)
+
+            # Create QR code image with logo
+            qr_image = qr.make_image(fill_color="black", back_color="white")
+
+            # Resize if needed
+            qr_image = qr_image.resize((size, size))
+
+            # Create uploads directory if it doesn't exist
+            upload_dir = os.path.join(current_app.static_folder, 'qrcodes')
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+
+            # Save image
+            file_path = os.path.join(upload_dir, filename)
+            qr_image.save(file_path)
+
+            # Generate URL
+            qr_url = url_for('static', filename=f'qrcodes/{filename}')
+
+            return qr_url
+
+        except Exception as e:
+            current_app.logger.error(f"QR generation error: {str(e)}")
+            return None

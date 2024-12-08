@@ -39,3 +39,6 @@ class Config:
     MAX_REFERRAL_LEVELS = 5
     DEFAULT_BUY_COMMISSION = 1.0  # percentage
     DEFAULT_SELL_COMMISSION = 0.5  # percentage
+
+    STATIC_FOLDER = 'static'
+    QR_CODE_PATH = 'qrcodes'
