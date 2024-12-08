@@ -292,7 +292,7 @@ def check_deposit_status(current_user):
                 "amount_usdt": transaction.amount_usdt,
                 "created_at": transaction.created_at.isoformat(),
                 "txn_hash": transaction.blockchain_txn_id
-            }
+            } if transaction else None
         }
 
         if assignment.is_active:
