@@ -36,7 +36,7 @@ def calculate_rate(current_user):
         }
 
         # Calculate based on INR input
-        if 'amount_inr' in data:
+        if 'amount_inr' in data and data['amount_inr'] is not None:
             amount_inr = float(data['amount_inr'])
 
             # Validate amount
@@ -57,7 +57,7 @@ def calculate_rate(current_user):
             })
 
         # Calculate based on USDT input
-        elif 'amount_usdt' in data:
+        elif 'amount_usdt' in data and data['amount_usdt'] is not None:
             amount_usdt = float(data['amount_usdt'])
             amount_inr = round(amount_usdt * rate, 2)
 
