@@ -14,16 +14,20 @@ class DepositMonitor:
 
     def monitor_active_assignments(self):
         try:
+            # Get both active and expired assignments
             assignments = (WalletAssignment.query
                            .filter(
-                WalletAssignment.is_active == True,
-                WalletAssignment.expires_at > datetime.utcnow()
-            )
+                                WalletAssignment.is_active == True
+                             )
                            .with_for_update()
                            .all())
 
             for assignment in assignments:
                 self._check_assignment(assignment)
+
+                # If assignment is expired, do one final check with grace period
+                if datetime.utcnow() > assignment.expires_at:
+                    self._handle_expired_assignment(assignment)
 
         except Exception as e:
             current_app.logger.error(f"Monitor error: {str(e)}")
@@ -129,6 +133,38 @@ class DepositMonitor:
         except Exception as e:
             current_app.logger.error(f"Get blockchain transactions error: {str(e)}")
             return []
+
+    def _handle_expired_assignment(self, assignment):
+        """Handle expired assignment with final check"""
+        try:
+            # One final check with grace period
+            grace_period = datetime.utcnow() + timedelta(minutes=5)
+            blockchain_txns = self._get_blockchain_transactions(
+                assignment.wallet.address,
+                assignment.assigned_at
+            )
+
+            # Check transactions one last time
+            for txn in blockchain_txns:
+                txn_timestamp = datetime.fromtimestamp(txn['timestamp'] / 1000)
+
+                # Only process if transaction was made during assignment period
+                if (txn_timestamp >= assignment.assigned_at and
+                        txn_timestamp <= assignment.expires_at):
+
+                    if not Transaction.query.filter_by(blockchain_txn_id=txn['hash']).first():
+                        if self._verify_transaction(txn, assignment):
+                            self._process_transaction(assignment, txn)
+                            return
+
+            # No valid transaction found, release the wallet
+            assignment.is_active = False
+            assignment.wallet.status = 'AVAILABLE'
+            db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Handle expired assignment error: {str(e)}")
 
 
 # scheduler/tasks.py

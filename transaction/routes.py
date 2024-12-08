@@ -9,6 +9,86 @@ transaction_bp = Blueprint('transaction', __name__)
 
 
 # Buy Flow APIs
+
+@transaction_bp.route('/buy/calculate-rate', methods=['POST'])
+@token_required
+def calculate_rate():
+    """
+    Calculate rate and converted amount
+    Request: {
+        "amount_inr": float   // Optional
+        "amount_usdt": float  // Optional
+    }
+    One of amount_inr or amount_usdt must be provided
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Get current rate
+        rate = TransactionUtil.get_current_rate()  # Implement based on your rate source
+
+        response = {
+            'rate': rate,
+            'min_inr': current_app.config['MIN_BUY_INR'],
+            'max_inr': current_app.config['MAX_BUY_INR']
+        }
+
+        # Calculate based on INR input
+        if 'amount_inr' in data:
+            amount_inr = float(data['amount_inr'])
+
+            # Validate amount
+            if amount_inr < current_app.config['MIN_BUY_INR']:
+                return jsonify({
+                    'error': f"Minimum amount is ₹{current_app.config['MIN_BUY_INR']}"
+                }), 400
+
+            if amount_inr > current_app.config['MAX_BUY_INR']:
+                return jsonify({
+                    'error': f"Maximum amount is ₹{current_app.config['MAX_BUY_INR']}"
+                }), 400
+
+            amount_usdt = round(amount_inr / rate, 2)
+            response.update({
+                'amount_inr': amount_inr,
+                'amount_usdt': amount_usdt
+            })
+
+        # Calculate based on USDT input
+        elif 'amount_usdt' in data:
+            amount_usdt = float(data['amount_usdt'])
+            amount_inr = round(amount_usdt * rate, 2)
+
+            # Validate converted amount
+            if amount_inr < current_app.config['MIN_BUY_INR']:
+                return jsonify({
+                    'error': f"Minimum amount is {round(current_app.config['MIN_BUY_INR'] / rate, 2)} USDT"
+                }), 400
+
+            if amount_inr > current_app.config['MAX_BUY_INR']:
+                return jsonify({
+                    'error': f"Maximum amount is {round(current_app.config['MAX_BUY_INR'] / rate, 2)} USDT"
+                }), 400
+
+            response.update({
+                'amount_inr': amount_inr,
+                'amount_usdt': amount_usdt
+            })
+
+        else:
+            return jsonify({'error': 'Either amount_inr or amount_usdt is required'}), 400
+
+        return jsonify(response), 200
+
+    except ValueError:
+        return jsonify({'error': 'Invalid amount format'}), 400
+    except Exception as e:
+        current_app.logger.error(f"Rate calculation error: {str(e)}")
+        return jsonify({'error': 'Failed to calculate rate'}), 500
+
+
 @transaction_bp.route('/buy/initiate', methods=['POST'])
 @token_required
 def initiate_buy(current_user):
@@ -288,8 +368,10 @@ def check_deposit_status(current_user):
             'transaction': {
                 "rupal_id": transaction.rupal_id,
                 "status": transaction.status,
+                "title": TransactionUtil.get_transaction_title(transaction.transaction_type.value),
                 "display_status": TransactionUtil.get_status_display(transaction.status.value),
                 "amount_usdt": transaction.amount_usdt,
+                "display_amount": TransactionUtil.get_transaction_amount_display(transaction.transaction_type, transaction.amount_usdt),
                 "created_at": transaction.created_at.isoformat(),
                 "txn_hash": transaction.blockchain_txn_id
             } if transaction else None
