@@ -42,3 +42,8 @@ class Config:
 
     STATIC_FOLDER = 'static'
     QR_CODE_PATH = 'qrcodes'
+
+    BANK_ACCOUNT_NAME = "Yadhah"
+    BANK_ACCOUNT_NUMBER = "1234567789"
+    BANK_IFSC_CODE = "DBI93838"
+    BANK_NAME = "DBI"
