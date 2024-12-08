@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
-from models.models import db, Transaction, TransactionStatus, TransactionType, User, BankAccount, WalletAssignment
+from models.models import db, Transaction, TransactionStatus, TransactionType, User, BankAccount, WalletAssignment, \
+    PooledWallet
 from services.wallet_pool import WalletPoolService
 from transaction.utils import TransactionUtil
 from auth.utils import token_required
@@ -192,89 +193,65 @@ def initiate_sell(current_user):
 
 @transaction_bp.route('/deposit/get-address', methods=['POST'])
 @token_required
-def get_deposit_address(current_user):
-    """
-       Initiate USDT deposit by assigning a wallet
-       Creates new assignment if no active assignment exists or if less than 2 minutes remaining
-       """
+def initiate_deposit(current_user):
     try:
-        # Check for existing active assignment
-        active_assignment = WalletAssignment.query.filter(
-            WalletAssignment.user_id == current_user.id,
-            WalletAssignment.is_active == True,
-            WalletAssignment.expires_at > datetime.utcnow()
-        ).first()
+        with db.session.begin_nested():
+            # Check existing active assignment with lock
+            active_assignment = (WalletAssignment.query
+                .filter(
+                    WalletAssignment.user_id == current_user.id,
+                    WalletAssignment.is_active == True,
+                    WalletAssignment.expires_at > datetime.utcnow()
+                )
+                .with_for_update()
+                .first())
 
-        if active_assignment:
-            # Calculate remaining time in minutes
-            time_remaining = (active_assignment.expires_at - datetime.utcnow()).total_seconds() / 60
+            if active_assignment:
+                remaining_time = (active_assignment.expires_at - datetime.utcnow()).total_seconds()
+                if remaining_time > 120:  # More than 2 minutes
+                    return jsonify({
+                        'assignment_id': active_assignment.id,
+                        'address': active_assignment.wallet.address,
+                        'qr_url': TransactionUtil.generate_address_qr(active_assignment.wallet.address),
+                        'expires_at': int(active_assignment.expires_at.timestamp() * 1000),
+                        'expire_after': int(remaining_time * 1000)
+                    }), 200
 
-            # If more than 2 minutes remaining, return existing assignment
-            if time_remaining > 2:
+            # Get available wallet with lock
+            wallet = (PooledWallet.query
+                .filter_by(status='AVAILABLE')
+                .with_for_update(skip_locked=True)
+                .order_by(PooledWallet.last_used_at.asc())
+                .first())
 
-                return jsonify({
-                    'address': active_assignment.wallet.address,
-                    'assignment_id': active_assignment.id,
-                    'expires_at': active_assignment.expires_at.isoformat(),
-                    'expire_after': int((active_assignment.expires_at - datetime.utcnow()).total_seconds() * 1000),
-                    'qr_url': TransactionUtil.generate_address_qr(active_assignment.wallet.address),
-                    'message': 'Active assignment exists',
-                    'time_remaining_minutes': round(time_remaining, 2)
-                }), 200
+            if not wallet:
+                return jsonify({'error': 'No deposit addresses available'}), 503
 
-            # Less than 2 minutes remaining, mark current assignment as inactive
-            active_assignment.is_active = False
-            active_assignment.wallet.status = 'AVAILABLE'
-
-        # Get available wallet from pool
-        wallet = WalletPoolService.get_available_wallet()
-        if not wallet:
-            return jsonify({'error': 'No deposit addresses available'}), 503
-
-        # Create new assignment
-        expires_at = datetime.utcnow() + timedelta(minutes=6)
-        assignment = WalletAssignment(
-            wallet_id=wallet.id,
-            user_id=current_user.id,
-            assigned_at=datetime.utcnow(),
-            expires_at=expires_at,
-            is_active=True
-        )
-
-        # Update wallet status
-        wallet.status = 'IN_USE'
-        wallet.last_used_at = datetime.utcnow()
-        wallet.total_assignments += 1
-
-        # Create pending transaction if amount specified
-        transaction_id = None
-        if 'amount_usdt' in request.get_json():
-            amount_usdt = float(request.get_json()['amount_usdt'])
-            transaction = Transaction(
+            # Create new assignment
+            expires_at = datetime.utcnow() + timedelta(minutes=30)
+            assignment = WalletAssignment(
+                wallet_id=wallet.id,
                 user_id=current_user.id,
-                transaction_type='DEPOSIT',
-                amount_usdt=amount_usdt,
-                status='PENDING',
-                to_address=wallet.address,
-                created_at=datetime.utcnow()
+                assigned_at=datetime.utcnow(),
+                expires_at=expires_at,
+                is_active=True
             )
-            db.session.add(transaction)
-            transaction_id = transaction.id
+            db.session.add(assignment)
+            db.session.flush()
 
-        db.session.add(assignment)
-        db.session.flush()
-        db.session.commit()
+            # Update wallet status
+            wallet.status = 'IN_USE'
+            wallet.last_used_at = datetime.utcnow()
 
-        return jsonify({
-            'assignment_id': assignment.id,
-            'address': wallet.address,
-            'expires_at': expires_at.isoformat(),
-            'expire_after': 5*60*1000,
-            'qr_url': TransactionUtil.generate_address_qr(wallet.address),
-            'transaction_id': transaction_id,
-            'message': 'New assignment created',
-            'time_remaining_minutes': 30
-        }), 200
+            db.session.commit()
+
+            return jsonify({
+                'assignment_id': assignment.id,
+                'address': wallet.address,
+                'qr_url': TransactionUtil.generate_address_qr(assignment.wallet.address),
+                'expires_at': int(expires_at.timestamp() * 1000),
+                'expire_after': int(timedelta(minutes=20).total_seconds() * 1000)
+            }), 200
 
     except Exception as e:
         db.session.rollback()
@@ -284,64 +261,57 @@ def get_deposit_address(current_user):
 
 @transaction_bp.route('/deposit/check-transaction', methods=['GET'])
 @token_required
-def check_deposit_transaction(current_user):
-    """
-    Check for deposit transaction
-    Query params:
-    - assignment_id: ID of wallet assignment
-    """
+def check_deposit_status(current_user, assignment_id):
     try:
-        assignment_id = request.args.get('assignment_id')
-        if not assignment_id:
-            return jsonify({'error': 'Assignment ID is required'}), 400
+        # Get assignment with lock
+        assignment = (WalletAssignment.query
+            .filter_by(
+                id=assignment_id,
+                user_id=current_user.id
+            )
+            .with_for_update()
+            .first_or_404())
 
-        # Get wallet assignment
-        assignment = WalletAssignment.query.filter_by(
-            id=assignment_id,
-            user_id=current_user.id
+        # Get associated transaction if exists
+        transaction = Transaction.query.filter_by(
+            wallet_assignment_id=assignment.id,
+            status='COMPLETED'
         ).first()
 
-        if not assignment:
-            return jsonify({'error': 'Invalid assignment'}), 404
-
-        # Check if assignment is expired
-        if datetime.utcnow() > assignment.expires_at:
-            if assignment.is_active:
-                assignment.is_active = False
-                assignment.wallet.status = 'AVAILABLE'
-                db.session.commit()
-            return jsonify({
-                'error': 'Assignment expired',
-                'code': 'ASSIGNMENT_EXPIRED'
-            }), 400
-
-        # Check for transactions within assignment period
-        transaction = Transaction.query.filter(
-            Transaction.user_id == current_user.id,
-            Transaction.transaction_type == 'DEPOSIT',
-            Transaction.to_address == assignment.wallet.address,
-            Transaction.status == 'COMPLETED',
-            Transaction.created_at.between(assignment.assigned_at, assignment.expires_at)
-        ).order_by(Transaction.created_at.desc()).first()
-
-        return jsonify({
-            'assignment_id': assignment.id,
+        response = {
             'address': assignment.wallet.address,
-            'expires_at': assignment.expires_at.isoformat(),
-            'transaction_detected': bool(transaction) if transaction else None,
+            'is_active': assignment.is_active,
+            'transaction_detected': bool(transaction),
             'transaction': {
-                'id': transaction.id,
+                "rupal_id": transaction.rupal_id,
+                "status": transaction.status,
+                "display_status": TransactionUtil.get_status_display(transaction.status.value),
+                "amount_usdt": transaction.amount_usdt,
+                "created_at": transaction.created_at.isoformat(),
+                "txn_hash": transaction.blockchain_txn_id
+            }
+        }
+
+        if assignment.is_active:
+            now = datetime.utcnow()
+            if now < assignment.expires_at:
+                response.update({
+                    'expires_at': int(assignment.expires_at.timestamp() * 1000),
+                    'expire_after': int((assignment.expires_at - now).total_seconds() * 1000)
+                })
+
+        if transaction:
+            response.update({
                 'amount_usdt': transaction.amount_usdt,
-                'blockchain_txn_id': transaction.blockchain_txn_id,
-                'created_at': transaction.created_at.isoformat(),
-                'status': transaction.status
-            } if transaction else None,
-            'time_remaining': int((assignment.expires_at - datetime.utcnow()).total_seconds())
-        }), 200
+                'blockchain_txn_id': transaction.blockchain_txn_id
+            })
+
+        return jsonify(response), 200
 
     except Exception as e:
-        current_app.logger.error(f"Check transaction error: {str(e)}")
-        return jsonify({'error': 'Failed to check transaction'}), 500
+        current_app.logger.error(f"Check status error: {str(e)}")
+        return jsonify({'error': 'Failed to check status'}), 500
+
 
 # Withdraw Flow APIs
 @transaction_bp.route('/withdraw/initiate', methods=['POST'])
