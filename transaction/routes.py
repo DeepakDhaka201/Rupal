@@ -253,7 +253,6 @@ def initiate_deposit(current_user):
             }), 200
 
     except Exception as e:
-        db.session.rollback()
         current_app.logger.error(f"Deposit initiation error: {str(e)}")
         return jsonify({'error': 'Failed to initiate deposit'}), 500
 
