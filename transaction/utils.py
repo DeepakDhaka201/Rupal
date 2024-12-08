@@ -122,6 +122,12 @@ class TransactionUtil:
         return f"PAY-{timestamp}-{random_str}"
 
     @staticmethod
+    def generate_transaction_ref():
+        """Generate unique payment reference for bank transfers"""
+        random_str = 'PO'.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        return f"{random_str}"
+
+    @staticmethod
     def validate_bank_transfer_amount(amount_inr):
         """Validate bank transfer amount"""
         min_amount = current_app.config['MIN_TRANSFER_INR']

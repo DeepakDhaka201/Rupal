@@ -116,6 +116,7 @@ def initiate_buy(current_user):
         # Create transaction
         transaction = Transaction(
             user_id=current_user.id,
+            rupal_id=TransactionUtil.generate_transaction_ref(),
             transaction_type=TransactionType.BUY,
             amount_inr=amount_inr,
             amount_usdt=amount_usdt,
@@ -130,10 +131,12 @@ def initiate_buy(current_user):
         return jsonify({
             'transaction': {
                 'id': transaction.id,
+                'rupal_id': transaction.rupal_id,
                 'amount_inr': amount_inr,
                 'amount_usdt': amount_usdt,
                 'rate': rate,
                 'payment_reference': transaction.payment_reference,
+                'created_at': transaction.created_at.isoformat(),
                 'bank_details': {
                     'account_name': current_app.config['BANK_ACCOUNT_NAME'],
                     'account_number': current_app.config['BANK_ACCOUNT_NUMBER'],
@@ -160,7 +163,8 @@ def confirm_buy(current_user):
     """
     try:
         transaction_id = request.form.get('transaction_id')
-        if not transaction_id or 'payment_proof' not in request.files:
+        ref_number = request.form.get('ref_number')
+        if not transaction_id or 'payment_proof' not in request.files or not ref_number:
             return jsonify({'error': 'All fields are required'}), 400
 
         transaction = Transaction.query.filter_by(
@@ -181,6 +185,7 @@ def confirm_buy(current_user):
 
         # Update transaction
         transaction.payment_proof = proof_path
+        transaction.payment_reference = ref_number
         transaction.status = TransactionStatus.PROCESSING
 
         db.session.commit()
