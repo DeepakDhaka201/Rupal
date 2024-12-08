@@ -34,6 +34,12 @@ def get_dashboard_summary(current_user):
 
         return jsonify({
             'wallet_balance': current_user.wallet_balance,
+            'user': {
+                "id": current_user.id,
+                "name": current_user.name,
+                "mobile": current_user.mobile,
+                "status": current_user.status
+            },
             'recent_transactions': [{
                 'id': tx.id,
                 'rupal_id': tx.rupal_id,
