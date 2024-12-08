@@ -236,7 +236,7 @@ def get_deposit_address(current_user):
             'wallet': {
                 'address': wallet.address,
                 'expires_at': expires_at.isoformat(),
-                'expire_after': 6*60*1000,
+                'expire_after': 20*1000,
                 'qr': qr_url,
             },
             'qr_data': f'tron:{wallet.address}',
