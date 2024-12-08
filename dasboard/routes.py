@@ -40,6 +40,7 @@ def get_dashboard_summary(current_user):
                 "mobile": current_user.mobile,
                 "status": current_user.status.value
             },
+            'show_banner': None if recent_transactions and len(recent_transactions) > 0 else True,
             'recent_transactions': [{
                 'id': tx.id,
                 'rupal_id': tx.rupal_id,
