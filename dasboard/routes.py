@@ -38,7 +38,7 @@ def get_dashboard_summary(current_user):
                 "id": current_user.id,
                 "name": current_user.name,
                 "mobile": current_user.mobile,
-                "status": current_user.status.name
+                "status": current_user.status.value
             },
             'recent_transactions': [{
                 'id': tx.id,
