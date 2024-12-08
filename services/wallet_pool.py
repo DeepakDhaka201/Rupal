@@ -49,7 +49,7 @@ class WalletPoolMonitor:
         """Check deposits for a specific wallet assignment"""
         try:
             wallet = assignment.wallet
-            last_check = wallet.last_checked_at or assignment.assigned_at
+            last_check = assignment.assigned_at
 
             # Get transactions from TRON API
             transactions = self._get_wallet_transactions(
@@ -95,6 +95,13 @@ class WalletPoolMonitor:
             if Transaction.query.filter_by(
                     blockchain_txn_id=txn_data['hash']
             ).first():
+                return
+
+            txn_timestamp = datetime.fromtimestamp(txn_data['timestamp'] / 1000)
+            if txn_timestamp < assignment.assigned_at or txn_timestamp > assignment.expires_at:
+                current_app.logger.warning(
+                    f"Transaction {txn_data['hash']} occurred outside assignment period"
+                )
                 return
 
             # Verify transaction
