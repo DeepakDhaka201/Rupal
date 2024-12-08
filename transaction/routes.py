@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from models.models import db, Transaction, TransactionStatus, TransactionType, User, BankAccount, WalletAssignment, \
     PooledWallet
-from services.wallet_pool import WalletPoolService
 from transaction.utils import TransactionUtil
 from auth.utils import token_required
 from datetime import datetime, timedelta
