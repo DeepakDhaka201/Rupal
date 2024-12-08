@@ -118,8 +118,8 @@ def initiate_buy(current_user):
             user_id=current_user.id,
             rupal_id=TransactionUtil.generate_transaction_ref(),
             transaction_type=TransactionType.BUY,
-            amount_inr=amount_inr,
-            amount_usdt=amount_usdt,
+            amount_inr=round(amount_inr, 2),
+            amount_usdt=round(amount_usdt, 2),
             exchange_rate=rate,
             status=TransactionStatus.PENDING,
             payment_reference=TransactionUtil.generate_payment_reference()

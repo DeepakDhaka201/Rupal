@@ -95,7 +95,7 @@ class DepositMonitor:
                 wallet_assignment_id=assignment.id,
                 transaction_type='DEPOSIT',
                 status='COMPLETED',
-                amount_usdt=amount_usdt,
+                amount_usdt=round(amount_usdt, 2),
                 blockchain_txn_id=txn['hash'],
                 created_at=datetime.utcnow()
             )
