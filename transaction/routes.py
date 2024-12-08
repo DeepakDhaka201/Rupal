@@ -259,8 +259,13 @@ def initiate_deposit(current_user):
 
 @transaction_bp.route('/deposit/check-transaction', methods=['GET'])
 @token_required
-def check_deposit_status(current_user, assignment_id):
+def check_deposit_status(current_user):
     try:
+        assignment_id = request.args.get('assignment_id')
+
+        if not assignment_id:
+            return {"error": "assignment_id is required"}, 400
+
         # Get assignment with lock
         assignment = (WalletAssignment.query
             .filter_by(
