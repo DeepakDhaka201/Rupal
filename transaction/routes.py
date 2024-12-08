@@ -211,12 +211,22 @@ def get_deposit_address(current_user):
 
             # If more than 2 minutes remaining, return existing assignment
             if time_remaining > 2:
-                return jsonify({
+                print({
                     'address': active_assignment.wallet.address,
                     'assignment_id': active_assignment.id,
                     'expires_at': active_assignment.expires_at.isoformat(),
                     'expire_after': int((active_assignment.expires_at - datetime.utcnow()).total_seconds() * 1000),
                     'qr': TransactionUtil.generate_address_qr(active_assignment.wallet.address),
+                    'message': 'Active assignment exists',
+                    'time_remaining_minutes': round(time_remaining, 2)
+                })
+
+                return jsonify({
+                    'address': active_assignment.wallet.address,
+                    'assignment_id': active_assignment.id,
+                    'expires_at': active_assignment.expires_at.isoformat(),
+                    'expire_after': int((active_assignment.expires_at - datetime.utcnow()).total_seconds() * 1000),
+                    'qr_url': TransactionUtil.generate_address_qr(active_assignment.wallet.address),
                     'message': 'Active assignment exists',
                     'time_remaining_minutes': round(time_remaining, 2)
                 }), 200
