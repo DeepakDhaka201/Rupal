@@ -12,7 +12,7 @@ transaction_bp = Blueprint('transaction', __name__)
 
 @transaction_bp.route('/buy/calculate-rate', methods=['POST'])
 @token_required
-def calculate_rate():
+def calculate_rate(current_user):
     """
     Calculate rate and converted amount
     Request: {
