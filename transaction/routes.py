@@ -1,3 +1,5 @@
+import traceback
+
 from flask import Blueprint, request, jsonify, current_app
 from models.models import db, Transaction, TransactionStatus, TransactionType, User, BankAccount, WalletAssignment, \
     PooledWallet
@@ -630,6 +632,7 @@ def get_transactions(current_user):
         }), 200
 
     except Exception as e:
+        print(traceback.format_exc())
         current_app.logger.error(f"Get transactions error: {str(e)}")
         return jsonify({'error': 'Failed to fetch transactions'}), 500
 
