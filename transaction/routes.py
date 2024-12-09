@@ -516,11 +516,12 @@ def initiate_withdraw(current_user):
         if not current_user.check_wallet_pin(data['wallet_pin']):
             return jsonify({'error': 'Invalid wallet PIN'}), 400
 
+        if not TransactionUtil.validate_tron_address(data['address']):
+            return jsonify({'error': 'Invalid TRON address'}), 400
+
         if current_user.wallet_balance < total_amount:
             return jsonify({'error': 'Insufficient balance'}), 400
 
-        if not TransactionUtil.validate_tron_address(data['address']):
-            return jsonify({'error': 'Invalid TRON address'}), 400
 
         if amount_usdt < current_app.config['MIN_WITHDRAWAL_USDT']:
             return jsonify({
