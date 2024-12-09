@@ -577,6 +577,7 @@ def get_transactions(current_user):
     - per_page: int
     """
     try:
+        print("Inside Transactions")
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 20))
         tx_type = request.args.get('type')
