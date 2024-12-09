@@ -580,9 +580,12 @@ def get_transactions(current_user):
     """
     try:
         print("Inside Transactions")
+        print(request.args.get('page'))
 
         if request.args.get('page') and request.args.get('page') is not None:
             page = int(request.args.get('page', 1))
+            if page == 0:
+                page += 1
         else:
             page = 1
 
