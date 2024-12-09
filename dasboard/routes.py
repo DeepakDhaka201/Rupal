@@ -31,7 +31,6 @@ def get_dashboard_summary(current_user):
             is_verified=True
         ).all()
 
-
         return jsonify({
             'wallet_balance': current_user.wallet_balance,
             'user': {
@@ -51,7 +50,7 @@ def get_dashboard_summary(current_user):
                     tx.transaction_type.value, tx.amount_usdt),
                 'display_status': TransactionUtil.get_status_display(tx.status.value),
                 'status': tx.status.value,
-                'created_at': tx.created_at.isoformat()
+                'created_at': TransactionUtil.format_created_at_to_ist(tx.created_at)
             } for tx in recent_transactions],
             'bank_accounts': [{
                 'id': account.id,

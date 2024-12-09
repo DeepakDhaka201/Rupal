@@ -136,7 +136,7 @@ def initiate_buy(current_user):
                 'amount_usdt': amount_usdt,
                 'rate': rate,
                 'payment_reference': transaction.payment_reference,
-                'created_at': transaction.created_at.isoformat(),
+                'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
                 'bank_details': {
                     'account_name': current_app.config['BANK_ACCOUNT_NAME'],
                     'account_number': current_app.config['BANK_ACCOUNT_NUMBER'],
@@ -347,8 +347,8 @@ def initiate_sell(current_user):
                 'rate': rate,
                 'status': transaction.status.value,
                 'display_status': TransactionUtil.get_status_display(transaction.status.value),
-                'created_at': transaction.created_at.isoformat(),
-                'bank_details' : {
+                'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
+                'bank_details': {
                     'bank_name': bank_account.bank_name,
                     'account_holder': bank_account.account_holder,
                     'account_number': bank_account.account_number,
@@ -370,13 +370,13 @@ def initiate_deposit(current_user):
         with db.session.begin_nested():
             # Check existing active assignment with lock
             active_assignment = (WalletAssignment.query
-                .filter(
-                    WalletAssignment.user_id == current_user.id,
-                    WalletAssignment.is_active == True,
-                    WalletAssignment.expires_at > datetime.utcnow()
-                )
-                .with_for_update()
-                .first())
+                                 .filter(
+                WalletAssignment.user_id == current_user.id,
+                WalletAssignment.is_active == True,
+                WalletAssignment.expires_at > datetime.utcnow()
+            )
+                                 .with_for_update()
+                                 .first())
 
             if active_assignment:
                 remaining_time = (active_assignment.expires_at - datetime.utcnow()).total_seconds()
@@ -391,10 +391,10 @@ def initiate_deposit(current_user):
 
             # Get available wallet with lock
             wallet = (PooledWallet.query
-                .filter_by(status='AVAILABLE')
-                .with_for_update(skip_locked=True)
-                .order_by(PooledWallet.last_used_at.asc())
-                .first())
+                      .filter_by(status='AVAILABLE')
+                      .with_for_update(skip_locked=True)
+                      .order_by(PooledWallet.last_used_at.asc())
+                      .first())
 
             if not wallet:
                 return jsonify({'error': 'No deposit addresses available'}), 503
@@ -441,12 +441,12 @@ def check_deposit_status(current_user):
 
         # Get assignment with lock
         assignment = (WalletAssignment.query
-            .filter_by(
-                id=assignment_id,
-                user_id=current_user.id
-            )
-            .with_for_update()
-            .first_or_404())
+                      .filter_by(
+            id=assignment_id,
+            user_id=current_user.id
+        )
+                      .with_for_update()
+                      .first_or_404())
 
         # Get associated transaction if exists
         transaction = Transaction.query.filter_by(
@@ -464,8 +464,9 @@ def check_deposit_status(current_user):
                 "title": TransactionUtil.get_transaction_title(transaction.transaction_type.value),
                 "display_status": TransactionUtil.get_status_display(transaction.status.value),
                 "amount_usdt": transaction.amount_usdt,
-                "display_amount": TransactionUtil.get_transaction_amount_display(transaction.transaction_type, transaction.amount_usdt),
-                "created_at": transaction.created_at.isoformat(),
+                "display_amount": TransactionUtil.get_transaction_amount_display(transaction.transaction_type,
+                                                                                 transaction.amount_usdt),
+                "created_at": TransactionUtil.format_created_at_to_ist(transaction.created_at),
                 "txn_hash": transaction.blockchain_txn_id
             } if transaction else None
         }
@@ -522,7 +523,6 @@ def initiate_withdraw(current_user):
         if current_user.wallet_balance < total_amount:
             return jsonify({'error': 'Insufficient balance'}), 400
 
-
         if amount_usdt < current_app.config['MIN_WITHDRAWAL_USDT']:
             return jsonify({
                 'error': f'Minimum withdrawal amount is {current_app.config["MIN_WITHDRAWAL_USDT"]} USDT'
@@ -560,6 +560,7 @@ def initiate_withdraw(current_user):
         db.session.rollback()
         current_app.logger.error(f"Withdraw initiate error: {str(e)}")
         return jsonify({'error': 'Failed to initiate withdrawal'}), 500
+
 
 # Common Transaction APIs
 @transaction_bp.route('/transactions', methods=['GET'])
@@ -603,11 +604,16 @@ def get_transactions(current_user):
         return jsonify({
             'transactions': [{
                 'id': tx.id,
+                'rupal_id': tx.rupal_id,
+                'title': TransactionUtil.get_transaction_title(tx.transaction_type),
+                'icon': TransactionUtil.get_transaction_icon(tx.transaction_type),
                 'type': tx.transaction_type.value,
                 'amount_usdt': tx.amount_usdt,
+                'amount_display': TransactionUtil.get_transaction_amount_display(tx.transaction_type, tx.amount_usdt),
                 'amount_inr': tx.amount_inr,
                 'status': tx.status.value,
-                'created_at': tx.created_at.isoformat(),
+                'display_status': TransactionUtil.get_status_display(tx.status.value),
+                'created_at': TransactionUtil.format_created_at_to_ist(tx.created_at),
                 'completed_at': tx.completed_at.isoformat() if tx.completed_at else None,
                 'blockchain_txn_id': tx.blockchain_txn_id,
                 'exchange_rate': tx.exchange_rate,
@@ -625,6 +631,7 @@ def get_transactions(current_user):
     except Exception as e:
         current_app.logger.error(f"Get transactions error: {str(e)}")
         return jsonify({'error': 'Failed to fetch transactions'}), 500
+
 
 @transaction_bp.route('/transaction/<int:transaction_id>', methods=['GET'])
 @token_required

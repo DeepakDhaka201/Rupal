@@ -4,6 +4,7 @@ import string
 import random
 import uuid
 
+import pytz
 import qrcode
 import requests
 from datetime import datetime, timedelta
@@ -28,7 +29,18 @@ class TransactionUtil:
             'BUY': 'USDT Purchased',
             'SELL': 'USDT Sold'
         }
-        return titles.get(transaction_type, 'Unknown Transaction')
+
+        colors = {
+            'DEPOSIT': '#2ECC71',
+            'WITHDRAW': '#E74C3C',
+            'BUY': '#2ECC71',
+            'SELL': '#E74C3C'
+        }
+
+        return {
+            "text": titles.get(transaction_type, 'Unknown Transaction'),
+            "color": colors.get(transaction_type, '#95A5A6')
+        }
 
     @staticmethod
     def get_current_rate(rate_type='buy'):
@@ -125,7 +137,7 @@ class TransactionUtil:
     def generate_transaction_ref():
         """Generate unique payment reference in the format PO########"""
         # Generate 8 random characters (uppercase letters or digits)
-        random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        random_str = ''.join(random.choices(string.digits, k=8))
         return f"PO{random_str}"
 
     @staticmethod
@@ -328,3 +340,23 @@ class TransactionUtil:
         except Exception as e:
             current_app.logger.error(f"QR generation error: {str(e)}")
             return None
+
+    @staticmethod
+    def format_created_at_to_ist(created_at):
+        # Define the IST timezone
+        ist_timezone = pytz.timezone("Asia/Kolkata")
+
+        # Add UTC timezone info to the naive datetime
+        utc_time = created_at.replace(tzinfo=pytz.utc)
+
+        # Convert UTC time to IST
+        ist_time = utc_time.astimezone(ist_timezone)
+
+        # Format as '12:24 PM, 20 Dec'
+        formatted_time = ist_time.strftime("%I:%M %p, %d %b")
+
+        return formatted_time
+
+    @staticmethod
+    def get_transaction_icon(transaction_type):
+        pass
