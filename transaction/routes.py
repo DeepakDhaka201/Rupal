@@ -207,7 +207,7 @@ def confirm_buy(current_user):
 # Sell Flow APIs
 @transaction_bp.route('/sell/calculate-rate', methods=['POST'])
 @token_required
-def calculate_rate(current_user):
+def sell_calculate_rate(current_user):
     """
     Calculate rate and converted amount
     Request: {
