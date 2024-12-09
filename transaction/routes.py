@@ -205,6 +205,85 @@ def confirm_buy(current_user):
 
 
 # Sell Flow APIs
+@transaction_bp.route('/sell/calculate-rate', methods=['POST'])
+@token_required
+def calculate_rate(current_user):
+    """
+    Calculate rate and converted amount
+    Request: {
+        "amount_inr": float   // Optional
+        "amount_usdt": float  // Optional
+    }
+    One of amount_inr or amount_usdt must be provided
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Get current rate
+        rate = TransactionUtil.get_current_rate()  # Implement based on your rate source
+
+        response = {
+            'rate': rate,
+            'min_inr': current_app.config['MIN_SELL_USDT'],
+            'max_inr': current_app.config['MAX_SELL_USDT']
+        }
+
+        # Calculate based on INR input
+        if 'amount_inr' in data and data['amount_inr'] is not None:
+            amount_inr = float(data['amount_inr'])
+            amount_usdt = round(amount_inr / rate, 2)
+
+            # Validate amount
+            if amount_usdt < current_app.config['MIN_SELL_USDT']:
+                return jsonify({
+                    'error': f"Minimum amount is {current_app.config['MIN_SELL_USDT']} USDT"
+                }), 400
+
+            if amount_usdt > current_app.config['MAX_SELL_USDT']:
+                return jsonify({
+                    'error': f"Maximum amount is {current_app.config['MAX_SELL_USDT']} USDT"
+                }), 400
+
+            response.update({
+                'amount_inr': amount_inr,
+                'amount_usdt': amount_usdt
+            })
+
+        # Calculate based on USDT input
+        elif 'amount_usdt' in data and data['amount_usdt'] is not None:
+            amount_usdt = float(data['amount_usdt'])
+            amount_inr = round(amount_usdt * rate, 2)
+
+            # Validate converted amount
+            if amount_usdt < current_app.config['MIN_SELL_USDT']:
+                return jsonify({
+                    'error': f"Minimum amount is {current_app.config['MIN_SELL_USDT']} USDT"
+                }), 400
+
+            if amount_usdt > current_app.config['MAX_SELL_USDT']:
+                return jsonify({
+                    'error': f"Maximum amount is {current_app.config['MAX_SELL_USDT']} USDT"
+                }), 400
+
+            response.update({
+                'amount_inr': amount_inr,
+                'amount_usdt': amount_usdt
+            })
+
+        else:
+            return jsonify({'error': 'Either amount_inr or amount_usdt is required'}), 400
+
+        return jsonify(response), 200
+
+    except ValueError:
+        return jsonify({'error': 'Invalid amount format'}), 400
+    except Exception as e:
+        current_app.logger.error(f"Rate calculation error: {str(e)}")
+        return jsonify({'error': 'Failed to calculate rate'}), 500
+
+
 @transaction_bp.route('/sell/initiate', methods=['POST'])
 @token_required
 def initiate_sell(current_user):
@@ -264,8 +343,17 @@ def initiate_sell(current_user):
                 'id': transaction.id,
                 'amount_usdt': amount_usdt,
                 'amount_inr': amount_inr,
+                'rupal_id': transaction.rupal_id,
                 'rate': rate,
-                'status': transaction.status.value
+                'status': transaction.status.value,
+                'display_status': TransactionUtil.get_status_display(transaction.status.value),
+                'created_at': transaction.created_at.isoformat(),
+                'bank_details' : {
+                    'bank_name': bank_account.bank_name,
+                    'account_holder': bank_account.account_holder,
+                    'account_number': bank_account.account_number,
+                    'ifsc_code': bank_account.ifsc_code
+                }
             }
         }), 200
 

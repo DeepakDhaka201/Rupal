@@ -6,6 +6,12 @@ import re
 bank_bp = Blueprint('bank', __name__)
 
 
+def get_bank_label(account_holder, account_number):
+    formatted_holder = account_holder[:8]  # First 6 characters of account holder
+    formatted_number = account_number[-6:]  # Last 6 characters of account number
+    return f"{formatted_holder} - ***{formatted_number}"
+
+
 @bank_bp.route('/accounts', methods=['GET'])
 @token_required
 def get_accounts(current_user):
@@ -23,8 +29,11 @@ def get_accounts(current_user):
                 'account_number': account.account_number,
                 'ifsc_code': account.ifsc_code,
                 'is_verified': account.is_verified,
-                'is_primary': account.is_primary
-            } for account in accounts]
+                'is_primary': account.is_primary,
+                'type': account.account_type,
+            } for account in accounts],
+            'account_ids': [account.id for account in accounts],
+            'account_labels': [get_bank_label(account.account_holder, account.account_number) for account in accounts]
         }), 200
 
     except Exception as e:
@@ -42,12 +51,13 @@ def add_account(current_user):
         "account_holder": "Account Holder Name",
         "account_number": "Account Number",
         "ifsc_code": "IFSC Code",
+        "type" : "current",
         "set_primary": boolean (optional)
     }
     """
     try:
         data = request.get_json()
-        required_fields = ['bank_name', 'account_holder', 'account_number', 'ifsc_code']
+        required_fields = ['bank_name', 'account_holder', 'account_number', 'ifsc_code', 'type']
         if not data or not all(field in data for field in required_fields):
             return jsonify({'error': 'All fields are required'}), 400
 
@@ -71,6 +81,7 @@ def add_account(current_user):
             bank_name=data['bank_name'],
             account_holder=data['account_holder'],
             account_number=data['account_number'],
+            account_type=data['type'],
             ifsc_code=data['ifsc_code'].upper()
         )
 
