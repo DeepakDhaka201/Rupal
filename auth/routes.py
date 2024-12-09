@@ -15,7 +15,8 @@ def send_otp():
     ---
     Request:
     {
-        "mobile": "1234567890"
+        "mobile": "1234567890",
+        "purpose": "LOGIN"
     }
     Response: {
         "message": "OTP sent successfully",
@@ -29,7 +30,11 @@ def send_otp():
         if not data or 'mobile' not in data:
             return jsonify({'error': 'Mobile number is required'}), 400
 
+        if not data or 'purpose' not in data:
+            return jsonify({'error': 'Purpose is required'}), 400
+
         mobile = data['mobile']
+        purpose = data['purpose']
 
         # Validate mobile number format
         if not re.match(r'^\d{10}$', mobile):
@@ -38,6 +43,12 @@ def send_otp():
         # Check if user exists
         user = User.query.filter_by(mobile=mobile).first()
         user_exists = bool(user)
+
+        if not user_exists and purpose == "LOGIN":
+            return jsonify({'error': 'Account is not registered. Please signup first.'}), 400
+
+        if user_exists and purpose == "SIGNUP":
+            return jsonify({'error': 'Account is already registered. Please Login.'}), 400
 
         # Generate and save OTP
         otp = generate_otp()
