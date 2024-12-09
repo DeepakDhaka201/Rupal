@@ -633,7 +633,7 @@ def get_transactions(current_user):
             } for tx in transactions.items],
             'pagination': {
                 'total_pages': transactions.pages,
-                'current_page': transactions.page,
+                'current_page': transactions.page + 1 if int(request.args.get('page', 1)) == 0 else transactions.page,
                 'total_items': transactions.total,
                 'has_next': transactions.has_next,
                 'has_prev': transactions.has_prev
