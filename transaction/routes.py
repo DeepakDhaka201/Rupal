@@ -530,6 +530,7 @@ def initiate_withdraw(current_user):
         # Create transaction and deduct balance
         transaction = Transaction(
             user_id=current_user.id,
+            rupal_id=TransactionUtil.generate_transaction_ref(),
             transaction_type=TransactionType.WITHDRAW,
             amount_usdt=amount_usdt,
             fee_usdt=fee,
@@ -545,6 +546,7 @@ def initiate_withdraw(current_user):
         return jsonify({
             'transaction': {
                 'id': transaction.id,
+                'rupal_id': transaction.rupal_id,
                 'amount_usdt': amount_usdt,
                 'fee': fee,
                 'total_amount': total_amount,
