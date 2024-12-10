@@ -49,16 +49,17 @@ class TransactionUtil:
         rate_type: 'buy' or 'sell'
         """
         try:
-            if rate_type == 'buy':
-                return {
-                    "Online Bank Transfer": "96.50",
-                    "Cash Deposit via CDM": "89.50"
-                }
-            else:
-                return {
+            rates = {
+                'buy': {
+                        "Online Bank Transfer": "96.50",
+                        "Cash Deposit via CDM": "89.50"
+                    },
+                'sell': {
                     "Online Bank Transfer": "94.50",
                     "Cash Deposit via CDM": "88.50"
                 }
+            }
+            return rates[rate_type][payment_mode]
         except Exception as e:
             current_app.logger.error(f"Rate fetch error: {str(e)}")
             return current_app.config.get('DEFAULT_USDT_RATE', 85.50)
