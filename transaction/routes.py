@@ -24,6 +24,7 @@ def calculate_rate(current_user):
     """
     try:
         data = request.get_json()
+        print(data)
         if not data or not data['amount_inr'] or not data['payment_mode']:
             return jsonify({'error': 'Wrong payload provided'}), 400
 
@@ -185,6 +186,7 @@ def sell_calculate_rate(current_user):
     """
     try:
         data = request.get_json()
+        print(data)
         if not data or not data['amount_inr'] or not data['payment_mode']:
             return jsonify({'error': 'Wrong payload provided'}), 400
 
