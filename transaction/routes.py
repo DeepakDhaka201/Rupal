@@ -188,7 +188,7 @@ def sell_calculate_rate(current_user):
         payment_mode = data['payment_mode'] if data and data['payment_mode'] else 'Online Bank Transfer'
         amount_inr = float(data['amount_inr']) if data and data['amount_inr'] else 0.00
 
-        rate = TransactionUtil.get_current_rate('buy', payment_mode, amount_inr)
+        rate = TransactionUtil.get_current_rate('sell', payment_mode, amount_inr)
 
         response = {
             'rate': rate,
