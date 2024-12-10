@@ -51,12 +51,12 @@ class TransactionUtil:
         try:
             rates = {
                 'buy': {
-                        "Online Bank Transfer": "96.50",
-                        "Cash Deposit via CDM": "89.50"
+                        "Online Bank Transfer": 96.50,
+                        "Cash Deposit via CDM": 89.50
                     },
                 'sell': {
-                    "Online Bank Transfer": "94.50",
-                    "Cash Deposit via CDM": "88.50"
+                    "Online Bank Transfer": 94.50,
+                    "Cash Deposit via CDM": 88.50
                 }
             }
             return rates[rate_type][payment_mode]
