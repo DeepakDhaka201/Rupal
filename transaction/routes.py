@@ -24,18 +24,15 @@ def calculate_rate(current_user):
     """
     try:
         data = request.get_json()
-        print(data)
-        if not data or not data['amount_inr'] or not data['payment_mode']:
-            return jsonify({'error': 'Wrong payload provided'}), 400
 
-        # Get current rate
-        payment_mode = data['payment_mode']
-        amount_inr = float(data['amount_inr'])
+        payment_mode = data['payment_mode'] if data or data['payment_mode'] else 'Cash Deposit via CDM'
+        amount_inr = float(data['amount_inr']) if data or data['amount_inr'] else 0.00
 
         rate = TransactionUtil.get_current_rate('buy', payment_mode, amount_inr)
 
         response = {
             'rate': rate,
+            'payment_mode': payment_mode,
             'min_inr': current_app.config['MIN_BUY_INR'],
             'max_inr': current_app.config['MAX_BUY_INR']
         }
@@ -186,18 +183,16 @@ def sell_calculate_rate(current_user):
     """
     try:
         data = request.get_json()
-        print(data)
-        if not data or not data['amount_inr'] or not data['payment_mode']:
-            return jsonify({'error': 'Wrong payload provided'}), 400
 
         # Get current rate
-        payment_mode = data['payment_mode']
-        amount_inr = float(data['amount_inr'])
+        payment_mode = data['payment_mode'] if data or data['payment_mode'] else 'Online Bank Transfer'
+        amount_inr = float(data['amount_inr']) if data or data['amount_inr'] else 0.00
 
         rate = TransactionUtil.get_current_rate('buy', payment_mode, amount_inr)
 
         response = {
             'rate': rate,
+            'payment_mode': payment_mode,
             'min_inr': current_app.config['MIN_SELL_INR'],
             'max_inr': current_app.config['MAX_SELL_INR']
         }
