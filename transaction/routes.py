@@ -207,6 +207,7 @@ def sell_calculate_rate(current_user):
     except ValueError:
         return jsonify({'error': 'Invalid amount format'}), 400
     except Exception as e:
+        print(traceback.print_exc())
         current_app.logger.error(f"Rate calculation error: {str(e)}")
         return jsonify({'error': 'Failed to calculate rate'}), 500
 
