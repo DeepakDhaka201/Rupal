@@ -28,6 +28,8 @@ def create_app(config_class=Config):
     from admin.routes import admin_bp
     from user.routes import user_bp
 
+    app.url_map.strict_slashes = False
+
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/api/v1/dashboard')
     app.register_blueprint(transaction_bp, url_prefix='/api/v1/transaction')
