@@ -18,18 +18,20 @@ def calculate_rate(current_user):
     """
     Calculate rate and converted amount
     Request: {
-        "amount_inr": float   // Optional
-        "amount_usdt": float  // Optional
+        "amount_inr": float
+        "payment_mode": string
     }
-    One of amount_inr or amount_usdt must be provided
     """
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
+        if not data or not data['amount_inr'] or not data['payment_mode']:
+            return jsonify({'error': 'Wrong payload provided'}), 400
 
         # Get current rate
-        rate = TransactionUtil.get_current_rate()  # Implement based on your rate source
+        payment_mode = data['payment_mode']
+        amount_inr = float(data['amount_inr'])
+
+        rate = TransactionUtil.get_current_rate('buy', payment_mode, amount_inr)
 
         response = {
             'rate': rate,
@@ -37,50 +39,11 @@ def calculate_rate(current_user):
             'max_inr': current_app.config['MAX_BUY_INR']
         }
 
-        # Calculate based on INR input
-        if 'amount_inr' in data and data['amount_inr'] is not None:
-            amount_inr = float(data['amount_inr'])
-
-            # Validate amount
-            if amount_inr < current_app.config['MIN_BUY_INR']:
-                return jsonify({
-                    'error': f"Minimum amount is ₹{current_app.config['MIN_BUY_INR']}"
-                }), 400
-
-            if amount_inr > current_app.config['MAX_BUY_INR']:
-                return jsonify({
-                    'error': f"Maximum amount is ₹{current_app.config['MAX_BUY_INR']}"
-                }), 400
-
-            amount_usdt = round(amount_inr / rate, 2)
-            response.update({
-                'amount_inr': amount_inr,
-                'amount_usdt': amount_usdt
-            })
-
-        # Calculate based on USDT input
-        elif 'amount_usdt' in data and data['amount_usdt'] is not None:
-            amount_usdt = float(data['amount_usdt'])
-            amount_inr = round(amount_usdt * rate, 2)
-
-            # Validate converted amount
-            if amount_inr < current_app.config['MIN_BUY_INR']:
-                return jsonify({
-                    'error': f"Minimum amount is {round(current_app.config['MIN_BUY_INR'] / rate, 2)} USDT"
-                }), 400
-
-            if amount_inr > current_app.config['MAX_BUY_INR']:
-                return jsonify({
-                    'error': f"Maximum amount is {round(current_app.config['MAX_BUY_INR'] / rate, 2)} USDT"
-                }), 400
-
-            response.update({
-                'amount_inr': amount_inr,
-                'amount_usdt': amount_usdt
-            })
-
-        else:
-            return jsonify({'error': 'Either amount_inr or amount_usdt is required'}), 400
+        amount_usdt = round(amount_inr / rate, 2)
+        response.update({
+            'amount_inr': amount_inr,
+            'amount_usdt': amount_usdt
+        })
 
         return jsonify(response), 200
 
@@ -112,7 +75,9 @@ def initiate_buy(current_user):
             return jsonify({'error': f'Minimum buy amount is {current_app.config["MIN_BUY_INR"]} INR'}), 400
 
         # Get current rate and calculate USDT amount
-        rate = TransactionUtil.get_current_rate('buy')
+        rate = TransactionUtil.get_current_rate('buy',
+                                                payment_mode='Cash Deposit via CDM',
+                                                amount_inr=amount_inr)
         amount_usdt = amount_inr / rate
 
         # Create transaction
@@ -213,72 +178,35 @@ def sell_calculate_rate(current_user):
     """
     Calculate rate and converted amount
     Request: {
-        "amount_inr": float   // Optional
-        "amount_usdt": float  // Optional
+        "amount_inr": float
+        "payment_mode": string
     }
-    One of amount_inr or amount_usdt must be provided
+
     """
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No data provided'}), 400
+        if not data or not data['amount_inr'] or not data['payment_mode']:
+            return jsonify({'error': 'Wrong payload provided'}), 400
 
         # Get current rate
-        rate = TransactionUtil.get_current_rate()  # Implement based on your rate source
+        payment_mode = data['payment_mode']
+        amount_inr = float(data['amount_inr'])
+
+        rate = TransactionUtil.get_current_rate('buy', payment_mode, amount_inr)
 
         response = {
             'rate': rate,
-            'min_inr': current_app.config['MIN_SELL_USDT'],
-            'max_inr': current_app.config['MAX_SELL_USDT']
+            'min_inr': current_app.config['MIN_SELL_INR'],
+            'max_inr': current_app.config['MAX_SELL_INR']
         }
 
-        # Calculate based on INR input
-        if 'amount_inr' in data and data['amount_inr'] is not None:
-            amount_inr = float(data['amount_inr'])
-            amount_usdt = round(amount_inr / rate, 2)
-
-            # Validate amount
-            if amount_usdt < current_app.config['MIN_SELL_USDT']:
-                return jsonify({
-                    'error': f"Minimum amount is {current_app.config['MIN_SELL_USDT']} USDT"
-                }), 400
-
-            if amount_usdt > current_app.config['MAX_SELL_USDT']:
-                return jsonify({
-                    'error': f"Maximum amount is {current_app.config['MAX_SELL_USDT']} USDT"
-                }), 400
-
-            response.update({
-                'amount_inr': amount_inr,
-                'amount_usdt': amount_usdt
-            })
-
-        # Calculate based on USDT input
-        elif 'amount_usdt' in data and data['amount_usdt'] is not None:
-            amount_usdt = float(data['amount_usdt'])
-            amount_inr = round(amount_usdt * rate, 2)
-
-            # Validate converted amount
-            if amount_usdt < current_app.config['MIN_SELL_USDT']:
-                return jsonify({
-                    'error': f"Minimum amount is {current_app.config['MIN_SELL_USDT']} USDT"
-                }), 400
-
-            if amount_usdt > current_app.config['MAX_SELL_USDT']:
-                return jsonify({
-                    'error': f"Maximum amount is {current_app.config['MAX_SELL_USDT']} USDT"
-                }), 400
-
-            response.update({
-                'amount_inr': amount_inr,
-                'amount_usdt': amount_usdt
-            })
-
-        else:
-            return jsonify({'error': 'Either amount_inr or amount_usdt is required'}), 400
+        amount_usdt = round(amount_inr / rate, 2)
+        response.update({
+            'amount_inr': amount_inr,
+            'amount_usdt': amount_usdt
+        })
 
         return jsonify(response), 200
-
     except ValueError:
         return jsonify({'error': 'Invalid amount format'}), 400
     except Exception as e:
@@ -292,20 +220,27 @@ def initiate_sell(current_user):
     """
     Initiate a sell order
     Request: {
-        "amount_usdt": 100,
-        "bank_account_id": 1
+        "amount_inr": 1000,
+        "bank_account_id": 1,
+        "payment_mode": "online"
     }
     """
     try:
         data = request.get_json()
-        if not data or not all(k in data for k in ['amount_usdt', 'bank_account_id']):
+        if not data or not all(k in data for k in ['amount_inr', 'bank_account_id', 'payment_mode']):
             return jsonify({'error': 'All fields are required'}), 400
 
-        amount_usdt = float(data['amount_usdt'])
+        amount_inr = float(data['amount_inr'])
+        payment_mode = data['payment_mode']
 
         # Validate amount and balance
-        if amount_usdt < current_app.config['MIN_SELL_USDT']:
+        if amount_inr < current_app.config['MIN_SELL_INR']:
             return jsonify({'error': f'Minimum sell amount is {current_app.config["MIN_SELL_USDT"]} USDT'}), 400
+
+        rate = TransactionUtil.get_current_rate('sell',
+                                                payment_mode=payment_mode,
+                                                amount_inr=amount_inr)
+        amount_usdt = round(amount_inr / rate, 2)
 
         if current_user.wallet_balance < amount_usdt:
             return jsonify({'error': 'Insufficient balance'}), 400
@@ -320,14 +255,11 @@ def initiate_sell(current_user):
         if not bank_account:
             return jsonify({'error': 'Invalid or unverified bank account'}), 400
 
-        # Calculate INR amount
-        rate = TransactionUtil.get_current_rate('sell')
-        amount_inr = amount_usdt * rate
-
         # Create transaction and deduct balance
         transaction = Transaction(
             user_id=current_user.id,
             transaction_type=TransactionType.SELL,
+            payment_mode=payment_mode,
             amount_usdt=amount_usdt,
             amount_inr=amount_inr,
             exchange_rate=rate,
@@ -347,6 +279,7 @@ def initiate_sell(current_user):
                 'amount_inr': amount_inr,
                 'rupal_id': transaction.rupal_id,
                 'rate': rate,
+                'payment_mode': payment_mode,
                 'status': transaction.status.value,
                 'display_status': TransactionUtil.get_status_display(transaction.status.value),
                 'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),

@@ -98,6 +98,8 @@ class Transaction(db.Model):
 
     # Bank transfer details
     bank_account_id = db.Column(db.Integer, db.ForeignKey('bank_account.id'))
+    payment_mode = db.Column(db.String(20))
+
     payment_reference = db.Column(db.String(50))
     payment_proof = db.Column(db.String(200))
     wallet_assignment_id = db.Column(db.Integer, db.ForeignKey('wallet_assignment.id'))

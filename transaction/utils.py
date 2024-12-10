@@ -43,23 +43,22 @@ class TransactionUtil:
         }
 
     @staticmethod
-    def get_current_rate(rate_type='buy'):
+    def get_current_rate(rate_type='buy', payment_mode='Cash Deposit via CDM', amount_inr=0.0):
         """
         Get current USDT rate for buy/sell
         rate_type: 'buy' or 'sell'
         """
         try:
-            # In production, integrate with a price feed API
-            base_rate = 85.50  # Example rate
-            spread = current_app.config.get(
-                f'{rate_type.upper()}_RATE_SPREAD',
-                0.5  # Default 0.5% spread
-            )
-
             if rate_type == 'buy':
-                return round(base_rate * (1 + spread / 100), 2)
+                return {
+                    "Online Bank Transfer": "96.50",
+                    "Cash Deposit via CDM": "89.50"
+                }
             else:
-                return round(base_rate * (1 - spread / 100), 2)
+                return {
+                    "Online Bank Transfer": "94.50",
+                    "Cash Deposit via CDM": "88.50"
+                }
         except Exception as e:
             current_app.logger.error(f"Rate fetch error: {str(e)}")
             return current_app.config.get('DEFAULT_USDT_RATE', 85.50)
@@ -353,7 +352,7 @@ class TransactionUtil:
         ist_time = utc_time.astimezone(ist_timezone)
 
         # Format as '12:24 PM, 20 Dec'
-        formatted_time = ist_time.strftime("%H:%M %d %b %y")
+        formatted_time = ist_time.strftime("%H:%M %d %b")
 
         return formatted_time
 

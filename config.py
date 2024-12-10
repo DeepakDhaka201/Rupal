@@ -20,8 +20,8 @@ class Config:
     # Transaction Limits
     MIN_BUY_INR = 1000
     MAX_BUY_INR = 1000000
-    MIN_SELL_USDT = 10
-    MAX_SELL_USDT = 10000
+    MIN_SELL_INR = 1000
+    MAX_SELL_INR = 5000000
     MIN_WITHDRAWAL_USDT = 10
     MAX_WITHDRAWAL_USDT = 10000
 
