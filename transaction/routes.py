@@ -98,7 +98,7 @@ def initiate_buy(current_user):
                 'id': transaction.id,
                 'rupal_id': transaction.rupal_id,
                 'amount_inr': amount_inr,
-                'amount_usdt': amount_usdt,
+                'amount_usdt': round(amount_usdt, 2),
                 'rate': rate,
                 'payment_reference': transaction.payment_reference,
                 'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
