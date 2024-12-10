@@ -233,7 +233,7 @@ def initiate_sell(current_user):
 
         # Validate amount and balance
         if amount_inr < current_app.config['MIN_SELL_INR']:
-            return jsonify({'error': f'Minimum sell amount is {current_app.config["MIN_SELL_USDT"]} USDT'}), 400
+            return jsonify({'error': f'Minimum sell amount is {current_app.config["MIN_SELL_INR"]} INR'}), 400
 
         rate = TransactionUtil.get_current_rate('sell',
                                                 payment_mode=payment_mode,
