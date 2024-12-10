@@ -191,3 +191,15 @@ def authenticate():
         db.session.rollback()
         current_app.logger.error(f"Authentication error: {str(e)}")
         return jsonify({'error': 'Authentication failed'}), 500
+
+
+@auth_bp.route('/logout')
+@token_required
+def logout(current_user):
+    try:
+        # Clear session
+        return jsonify({'message': 'Successfully logged out'}), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Logout error: {str(e)}")
+        return jsonify({'error': 'Logout failed'}), 500

@@ -49,3 +49,6 @@ class Config:
     BANK_ACCOUNT_NUMBER = "1234567789"
     BANK_IFSC_CODE = "DBI93838"
     BANK_NAME = "DBI"
+
+    SUPPORT_EMAIL = 'support@example.com'
+    SUPPORT_TELEGRAM = 'https://t.me/support_handle'

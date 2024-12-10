@@ -7,6 +7,8 @@ from auth.utils import token_required
 from datetime import datetime
 from sqlalchemy import func
 
+from transaction.utils import TransactionUtil
+
 referral_bp = Blueprint('referral', __name__)
 
 @referral_bp.route('/info', methods=['GET'])
@@ -29,36 +31,35 @@ def get_referral_info(current_user):
             user_id=current_user.id
         ).order_by(
             ReferralEarning.created_at.desc()
-        ).limit(5).all()
+        ).limit(25).all()
 
         # Get commission rates
         commission_rates = ReferralCommission.query.filter_by(
             is_active=True
         ).order_by(ReferralCommission.level).all()
 
+        rate = commission_rates[0] if commission_rates and len(commission_rates) > 0 else None
+
         return jsonify({
             'referral_code': current_user.referral_code,
             'total_referrals': len(direct_referrals),
-            'total_earnings': float(total_earnings),
+            'total_earnings': round(float(total_earnings), 2),
             'recent_earnings': [{
                 'id': earning.id,
                 'amount_usdt': earning.amount_usdt,
                 'commission_percent': earning.commission_percent,
                 'level': earning.referral_level,
                 'transaction_type': earning.transaction.transaction_type.value,
-                'created_at': earning.created_at.isoformat()
+                'created_at': TransactionUtil.format_created_at_to_ist(earning.created_at),
             } for earning in recent_earnings],
             'referrals': [{
                 'mobile': user.mobile,
-                'joined_at': user.created_at.isoformat(),
+                'name': user.name,
+                'joined_at': TransactionUtil.format_created_at_to_ist(user.created_at),
                 'status': user.status.value
             } for user in direct_referrals],
-            'commission_rates': [{
-                'level': rate.level,
-                'buy_commission': rate.buy_commission_percent,
-                'sell_commission': rate.sell_commission_percent,
-                'min_amount_usdt': rate.min_amount_usdt
-            } for rate in commission_rates]
+            'buy_commission': rate.buy_commission_percent if rate else 0.00,
+            'sell_commission': rate.sell_commission_percent if rate else 0.00,
         }), 200
 
     except Exception as e:
