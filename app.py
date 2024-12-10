@@ -26,6 +26,7 @@ def create_app(config_class=Config):
     from transaction.routes import transaction_bp
     from bank.routes import bank_bp
     from admin.routes import admin_bp
+    from user.routes import user_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/api/v1/dashboard')
@@ -33,6 +34,7 @@ def create_app(config_class=Config):
     app.register_blueprint(bank_bp, url_prefix='/api/v1/bank')
     app.register_blueprint(admin_bp, url_prefix='/api/v1/admin')
     app.register_blueprint(referral_bp, url_prefix='/api/v1/referral')
+    app.register_blueprint(user_bp, url_prefix='/api/v1/user')
 
     # Set up logging
     if not app.debug and not app.testing:
