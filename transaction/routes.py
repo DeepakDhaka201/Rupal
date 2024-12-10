@@ -559,7 +559,13 @@ def get_transactions(current_user):
                 'blockchain_txn_id': tx.blockchain_txn_id,
                 'payment_mode': tx.payment_mode,
                 'exchange_rate': tx.exchange_rate,
-                'fee_usdt': tx.fee_usdt
+                'fee_usdt': tx.fee_usdt,
+                'bank_details': {
+                    'bank_name': tx.bank_account.bank_name,
+                    'account_holder': tx.bank_account.account_holder,
+                    'account_number': tx.bank_account.account_number,
+                    'ifsc_code': tx.bank_account.ifsc_code
+                } if tx.bank_account else None
             } for tx in transactions.items],
             'pagination': {
                 'total_pages': transactions.pages,

@@ -46,11 +46,18 @@ def get_dashboard_summary(current_user):
                 'type': tx.transaction_type.value,
                 'title': TransactionUtil.get_transaction_title(tx.transaction_type.value),
                 'amount_usdt': tx.amount_usdt,
+                'amount_inr': tx.amount_inr,
                 'display_amount': TransactionUtil.get_transaction_amount_display(
                     tx.transaction_type.value, tx.amount_usdt),
                 'display_status': TransactionUtil.get_status_display(tx.status.value),
                 'status': tx.status.value,
-                'created_at': TransactionUtil.format_created_at_to_ist(tx.created_at)
+                'created_at': TransactionUtil.format_created_at_to_ist(tx.created_at),
+                'bank_details': {
+                    'bank_name': tx.bank_account.bank_name,
+                    'account_holder': tx.bank_account.account_holder,
+                    'account_number': tx.bank_account.account_number,
+                    'ifsc_code': tx.bank_account.ifsc_code
+                } if tx.bank_account else None
             } for tx in recent_transactions],
             'bank_accounts': [{
                 'id': account.id,
