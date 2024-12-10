@@ -353,7 +353,7 @@ class TransactionUtil:
         ist_time = utc_time.astimezone(ist_timezone)
 
         # Format as '12:24 PM, 20 Dec'
-        formatted_time = ist_time.strftime("%H:%M %d %b")
+        formatted_time = ist_time.strftime("%d %b, %H:%M")
 
         return formatted_time
 
