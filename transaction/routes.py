@@ -557,6 +557,7 @@ def get_transactions(current_user):
                 'created_at': TransactionUtil.format_created_at_to_ist(tx.created_at),
                 'completed_at': tx.completed_at.isoformat() if tx.completed_at else None,
                 'blockchain_txn_id': tx.blockchain_txn_id,
+                'payment_mode': tx.payment_mode,
                 'exchange_rate': tx.exchange_rate,
                 'fee_usdt': tx.fee_usdt
             } for tx in transactions.items],

@@ -23,7 +23,7 @@ def get_dashboard_summary(current_user):
             user_id=current_user.id
         ).order_by(
             Transaction.created_at.desc()
-        ).limit(5).all()
+        ).limit(4).all()
 
         # Get bank accounts
         bank_accounts = BankAccount.query.filter_by(
