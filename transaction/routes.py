@@ -25,8 +25,8 @@ def calculate_rate(current_user):
     try:
         data = request.get_json()
 
-        payment_mode = data['payment_mode'] if data or data['payment_mode'] else 'Cash Deposit via CDM'
-        amount_inr = float(data['amount_inr']) if data or data['amount_inr'] else 0.00
+        payment_mode = data['payment_mode'] if data and data['payment_mode'] else 'Cash Deposit via CDM'
+        amount_inr = float(data['amount_inr']) if data and data['amount_inr'] else 0.00
 
         rate = TransactionUtil.get_current_rate('buy', payment_mode, amount_inr)
 
@@ -185,8 +185,8 @@ def sell_calculate_rate(current_user):
         data = request.get_json()
 
         # Get current rate
-        payment_mode = data['payment_mode'] if data or data['payment_mode'] else 'Online Bank Transfer'
-        amount_inr = float(data['amount_inr']) if data or data['amount_inr'] else 0.00
+        payment_mode = data['payment_mode'] if data and data['payment_mode'] else 'Online Bank Transfer'
+        amount_inr = float(data['amount_inr']) if data and data['amount_inr'] else 0.00
 
         rate = TransactionUtil.get_current_rate('buy', payment_mode, amount_inr)
 
