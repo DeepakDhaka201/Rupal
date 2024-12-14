@@ -1,0 +1,82 @@
+<!-- templates/admin/referrals/earnings.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Referral Earnings{% endblock %}
+
+{% block content %}
+<h1>Referral Earnings</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="filters-form">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="from_date" class="form-control"
+                               value="{{ request.args.get('from_date', '') }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="to_date" class="form-control"
+                               value="{{ request.args.get('to_date', '') }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">User Mobile</label>
+                        <input type="text" name="mobile" class="form-control"
+                               value="{{ request.args.get('mobile', '') }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-secondary d-block">Filter</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Transaction</th>
+                <th>Level</th>
+                <th>Amount</th>
+                <th>Commission %</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for earning in earnings.items %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('admin.referral.referral_tree', user_id=earning.user_id) }}">
+                        {{ earning.user.mobile }}
+                    </a>
+                </td>
+                <td>
+                    <small>
+                        {{ earning.transaction.transaction_type.value }}
+                        ({{ earning.transaction.rupal_id }})
+                    </small>
+                </td>
+                <td>Level {{ earning.referral_level }}</td>
+                <td>{{ "%.2f"|format(earning.amount_usdt) }} USDT</td>
+                <td>{{ earning.commission_percent }}%</td>
+                <td>{{ earning.created_at|datetime }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{{ render_pagination(earnings) }}
+{% endblock %}

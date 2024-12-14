@@ -1,0 +1,94 @@
+<!-- templates/admin/users/list.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Users Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Users Management</h4>
+    </div>
+    <div class="card-body">
+        <!-- Filters -->
+        <form class="row g-3 mb-4" method="GET">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search"
+                    value="{{ search }}" placeholder="Search by mobile or name">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">All Status</option>
+                    {% for status in UserStatus %}
+                    <option value="{{ status.value }}" {% if status.value == request.args.get('status') %}selected{% endif %}>
+                        {{ status.value }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ url_for('admin_users.users_list') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+
+        <!-- Users Table -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users.items %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.mobile }}</td>
+                        <td>{{ "%.2f"|format(user.wallet_balance) }} USDT</td>
+                        <td>
+                            <span class="badge status-{{ user.status.value.lower() }}">
+                                {{ user.status.value }}
+                            </span>
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('admin_users.user_detail', user_id=user.id) }}"
+                                   class="btn btn-sm btn-info">View</a>
+                                <button type="button"
+                                        onclick="toggleUserStatus({{ user.id }}, '{{ user.status.value }}')"
+                                        class="btn btn-sm {% if user.status.value == 'ACTIVE' %}btn-danger{% else %}btn-success{% endif %}">
+                                    {{ 'Suspend' if user.status.value == 'ACTIVE' else 'Activate' }}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if users.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% for page in range(1, users.pages + 1) %}
+                <li class="page-item {% if page == users.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin_users.users_list', page=page, search=search, status=status) }}">
+                        {{ page }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

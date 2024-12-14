@@ -1,0 +1,143 @@
+<!-- templates/admin/users/detail.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}User Details - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">User Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Name</dt>
+                    <dd class="col-sm-8">{{ user.name }}</dd>
+
+                    <dt class="col-sm-4">Mobile</dt>
+                    <dd class="col-sm-8">{{ user.mobile }}</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge status-{{ user.status.value.lower() }}">
+                            {{ user.status.value }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Balance</dt>
+                    <dd class="col-sm-8">{{ "%.2f"|format(user.wallet_balance) }} USDT</dd>
+
+                    <dt class="col-sm-4">Referral Code</dt>
+                    <dd class="col-sm-8">{{ user.referral_code or 'N/A' }}</dd>
+
+                    <dt class="col-sm-4">Referred By</dt>
+                    <dd class="col-sm-8">{{ user.referred_by or 'N/A' }}</dd>
+
+                    <dt class="col-sm-4">Created At</dt>
+                    <dd class="col-sm-8">{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+
+                    <dt class="col-sm-4">Last Login</dt>
+                    <dd class="col-sm-8">
+                        {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}
+                    </dd>
+                </dl>
+            </div>
+            <div class="card-footer">
+                <button onclick="toggleUserStatus({{ user.id }}, '{{ user.status.value }}')"
+                        class="btn {% if user.status.value == 'ACTIVE' %}btn-danger{% else %}btn-success{% endif %}">
+                    {{ 'Suspend User' if user.status.value == 'ACTIVE' else 'Activate User' }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Transaction Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center">
+                            <h6>Total Transactions</h6>
+                            <h3>{{ stats.total_transactions }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center">
+                            <h6>Total Buy Volume</h6>
+                            <h3>{{ "%.2f"|format(stats.total_buy_amount) }} USDT</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 text-center">
+                            <h6>Total Sell Volume</h6>
+                            <h3>{{ "%.2f"|format(stats.total_sell_amount) }} USDT</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td>{{ tx.id }}</td>
+                                <td>{{ tx.transaction_type.value }}</td>
+                                <td>{{ "%.2f"|format(tx.amount_usdt) }} USDT</td>
+                                <td>
+                                    <span class="badge status-{{ tx.status.value.lower() }}">
+                                        {{ tx.status.value }}
+                                    </span>
+                                </td>
+                                <td>{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleUserStatus(userId, currentStatus) {
+    if (!confirm(`Are you sure you want to ${currentStatus === 'ACTIVE' ? 'suspend' : 'activate'} this user?`)) {
+        return;
+    }
+
+    $.post(`/admin/users/${userId}/toggle-status`)
+        .done(function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert('Failed to update user status');
+            }
+        })
+        .fail(function() {
+            alert('An error occurred while updating user status');
+        });
+}
+</script>
+{% endblock %}

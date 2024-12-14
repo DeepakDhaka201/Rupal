@@ -1,0 +1,107 @@
+<!-- templates/admin/transactions/list.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Transactions Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Transactions Management</h4>
+    </div>
+    <div class="card-body">
+        <!-- Filters -->
+        <form class="row g-3 mb-4" method="GET">
+            <div class="col-md-2">
+                <input type="text" class="form-control" name="search"
+                    value="{{ search }}" placeholder="Search ID/Mobile">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="type">
+                    <option value="">All Types</option>
+                    {% for type in TransactionType %}
+                    <option value="{{ type.value }}" {% if type.value == request.args.get('type') %}selected{% endif %}>
+                        {{ type.value }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="">All Status</option>
+                    {% for status in TransactionStatus %}
+                    <option value="{{ status.value }}" {% if status.value == request.args.get('status') %}selected{% endif %}>
+                        {{ status.value }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ url_for('admin_transactions.transactions_list') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+
+        <!-- Transactions Table -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Rupal ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Amount USDT</th>
+                        <th>Amount INR</th>
+                        <th>Status</th>
+                        <th>Payment Mode</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions.items %}
+                    <tr>
+                        <td>{{ tx.rupal_id }}</td>
+                        <td>{{ tx.user.mobile }}<br>{{ tx.user.name }}</td>
+                        <td>{{ tx.transaction_type.value }}</td>
+                        <td>{{ "%.2f"|format(tx.amount_usdt) }}</td>
+                        <td>{{ "%.2f"|format(tx.amount_inr) if tx.amount_inr else '-' }}</td>
+                        <td>
+                            <span class="badge status-{{ tx.status.value.lower() }}">
+                                {{ tx.status.value }}
+                            </span>
+                        </td>
+                        <td>{{ tx.payment_mode or '-' }}</td>
+                        <td>{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('admin_transactions.transaction_detail', transaction_id=tx.id) }}"
+                                   class="btn btn-sm btn-info">View</a>
+                                {% if tx.status.value in ['PENDING', 'PROCESSING'] %}
+                                    <button type="button" class="btn btn-sm btn-success"
+                                            onclick="updateTransactionStatus({{ tx.id }}, 'COMPLETED')">
+                                        Complete
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            onclick="updateTransactionStatus({{ tx.id }}, 'CANCELLED')">
+                                        Cancel
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% include 'admin/partials/pagination.html' %}
+    </div>
+</div>
+{% endblock %}

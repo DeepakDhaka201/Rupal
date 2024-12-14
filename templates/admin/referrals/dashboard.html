@@ -1,0 +1,134 @@
+<!-- templates/admin/referrals/dashboard.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Referral Dashboard{% endblock %}
+
+{% block content %}
+<h1>Referral Dashboard</h1>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Earnings</h5>
+                <p class="card-text display-6">{{ "%.2f"|format(total_earnings) }} USDT</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Commission Rates</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Level</th>
+                                <th>Buy Commission</th>
+                                <th>Sell Commission</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rate in commission_rates %}
+                            <tr>
+                                <td>Level {{ rate.level }}</td>
+                                <td>{{ rate.buy_commission_percent }}%</td>
+                                <td>{{ rate.sell_commission_percent }}%</td>
+                                <td>
+                                    <span class="badge {% if rate.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ 'Active' if rate.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Referrers</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Referrals</th>
+                                <th>Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user, count, earnings in top_referrers %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('admin.referral.referral_tree', user_id=user.id) }}">
+                                        {{ user.mobile }}
+                                    </a>
+                                </td>
+                                <td>{{ count }}</td>
+                                <td>{{ "%.2f"|format(earnings) }} USDT</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Recent Earnings</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Amount</th>
+                        <th>Level</th>
+                        <th>Transaction</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for earning in recent_earnings %}
+                    <tr>
+                        <td>{{ earning.user.mobile }}</td>
+                        <td>{{ "%.2f"|format(earning.amount_usdt) }} USDT</td>
+                        <td>Level {{ earning.referral_level }}</td>
+                        <td>
+                            <small>{{ earning.transaction.transaction_type.value }}</small>
+                        </td>
+                        <td>{{ earning.created_at|datetime }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+

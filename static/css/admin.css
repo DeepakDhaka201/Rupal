@@ -1,0 +1,64 @@
+<!-- static/css/admin.css -->
+.card {
+    margin-bottom: 1rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.status-active { background-color: #d4edda; color: #155724; }
+.status-suspended { background-color: #f8d7da; color: #721c24; }
+.status-pending { background-color: #fff3cd; color: #856404; }
+
+.table-responsive {
+    margin-bottom: 1rem;
+}
+
+.action-buttons {
+    white-space: nowrap;
+}
+
+.filters-form {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+/* static/js/admin.js */
+function confirmAction(message) {
+    return confirm(message || 'Are you sure you want to perform this action?');
+}
+
+function handleAjaxError(error) {
+    console.error('Ajax error:', error);
+    alert('An error occurred. Please try again.');
+}
+
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+
+    // Handle ajax form submissions
+    $('.ajax-form').on('submit', function(e) {
+        e.preventDefault();
+        let form = $(this);
+
+        $.ajax({
+            url: form.attr('action'),
+            method: form.attr('method'),
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || 'Operation failed');
+                }
+            },
+            error: handleAjaxError
+        });
+    });
+});

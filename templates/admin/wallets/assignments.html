@@ -1,0 +1,58 @@
+<!-- templates/admin/wallets/assignments.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Wallet Assignments{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2>Assignments for Wallet</h2>
+    <p class="lead">Address: {{ wallet.address }}</p>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Assigned At</th>
+                <th>Expires At</th>
+                <th>Status</th>
+                <th>Transactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assignment in assignments.items %}
+            <tr>
+                <td>{{ assignment.user.mobile }}</td>
+                <td>{{ assignment.assigned_at|datetime }}</td>
+                <td>{{ assignment.expires_at|datetime }}</td>
+                <td>
+                    <span class="badge {% if assignment.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ 'Active' if assignment.is_active else 'Inactive' }}
+                    </span>
+                </td>
+                <td>
+                    {% set txns = assignment.transactions %}
+                    {% if txns %}
+                    <ul class="list-unstyled mb-0">
+                        {% for txn in txns %}
+                        <li>
+                            <small>
+                                {{ txn.amount_usdt }} USDT
+                                ({{ txn.status.value }})
+                            </small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    No transactions
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{{ render_pagination(assignments) }}
+{% endblock %}

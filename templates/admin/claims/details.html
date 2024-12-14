@@ -1,0 +1,161 @@
+<!-- templates/admin/claims/details.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Claim Details #{{ claim.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Claim Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Bank Name</dt>
+                            <dd class="col-sm-8">{{ claim.bank_name }}</dd>
+
+                            <dt class="col-sm-4">Account Holder</dt>
+                            <dd class="col-sm-8">{{ claim.account_holder }}</dd>
+
+                            <dt class="col-sm-4">Account Number</dt>
+                            <dd class="col-sm-8">{{ claim.account_number }}</dd>
+
+                            <dt class="col-sm-4">IFSC Code</dt>
+                            <dd class="col-sm-8">{{ claim.ifsc_code }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Amount</dt>
+                            <dd class="col-sm-8">₹{{ "%.2f"|format(claim.amount_inr) }}</dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                {{ claim.status }}
+                                {% if claim.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Created At</dt>
+                            <dd class="col-sm-8">{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+
+                            {% if claim.claimed_by %}
+                                <dt class="col-sm-4">Claimed By</dt>
+                                <dd class="col-sm-8">{{ claim.claimed_by }}</dd>
+
+                                <dt class="col-sm-4">Claimed At</dt>
+                                <dd class="col-sm-8">{{ claim.claimed_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+
+                                <dt class="col-sm-4">Expires At</dt>
+                                <dd class="col-sm-8">{{ claim.expires_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if transactions %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Associated Transactions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td>{{ tx.id }}</td>
+                                <td>{{ tx.user.mobile }}<br>{{ tx.user.name }}</td>
+                                <td>{{ tx.transaction_type.value }}</td>
+                                <td>
+                                    {{ "%.2f"|format(tx.amount_usdt) }} USDT<br>
+                                    ₹{{ "%.2f"|format(tx.amount_inr) }}
+                                </td>
+                                <td>
+                                    <span class="badge status-{{ tx.status.value.lower() }}">
+                                        {{ tx.status.value }}
+                                    </span>
+                                </td>
+                                <td>{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin_transactions.transaction_detail', transaction_id=tx.id) }}"
+                                       class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        {% if claim.status not in ['CLAIMED', 'COMPLETED'] %}
+        <div class="card sticky-top">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_claims.edit_claim', claim_id=claim.id) }}"
+                       class="btn btn-warning">Edit Claim</a>
+                    <button onclick="toggleClaimStatus({{ claim.id }}, {{ claim.is_active|tojson }})"
+                            class="btn {{ 'btn-danger' if claim.is_active else 'btn-success' }}">
+                        {{ 'Deactivate' if claim.is_active else 'Activate' }} Claim
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleClaimStatus(claimId, currentStatus) {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this claim?`)) {
+        return;
+    }
+
+    $.ajax({
+        url: `/admin/claims/${claimId}/update-status`,
+        method: 'POST',
+        data: {
+            is_active: !currentStatus
+        },
+        success: function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert(response.message || 'Failed to update claim status');
+            }
+        },
+        error: function() {
+            alert('An error occurred while updating claim status');
+        }
+    });
+}
+</script>
+{% endblock %}

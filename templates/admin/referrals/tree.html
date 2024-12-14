@@ -1,0 +1,85 @@
+<!-- templates/admin/referrals/tree.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Referral Tree{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1>Referral Tree</h1>
+    <p class="lead">User: {{ user.mobile }}</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Direct Referrals ({{ referrals|length }})</h5>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Joined</th>
+                        <th>Status</th>
+                        <th>Total Earnings</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for referral in referrals %}
+                    <tr>
+                        <td>{{ referral.mobile }}</td>
+                        <td>{{ referral.created_at|datetime }}</td>
+                        <td>
+                            <span class="badge bg-{{ referral.status.name|lower }}">
+                                {{ referral.status.value }}
+                            </span>
+                        </td>
+                        <td>{{ "%.2f"|format(earnings_map.get(referral.id, 0)) }} USDT</td>
+                        <td>
+                            <a href="{{ url_for('admin.referral.referral_tree', user_id=referral.id) }}"
+                               class="btn btn-sm btn-secondary">View Tree</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Earnings</h5>
+            </div>
+            <div class="card-body">
+                {% set earnings = user.referral_earnings[:5] %}
+                {% if earnings %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Amount</th>
+                                <th>Level</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for earning in earnings %}
+                            <tr>
+                                <td>{{ "%.2f"|format(earning.amount_usdt) }} USDT</td>
+                                <td>Level {{ earning.referral_level }}</td>
+                                <td>{{ earning.created_at|datetime }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="mb-0">No earnings yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

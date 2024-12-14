@@ -1,0 +1,128 @@
+<!-- templates/admin/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="">Admin Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="">Users</a>
+                    </li>
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" href="{{ url_for('admin.transactions') }}">Transactions</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" href="{{ url_for('admin.claims') }}">Claims</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" href="{{ url_for('admin.rates') }}">Rates</a>-->
+<!--                    </li>-->
+<!--                    <li class="nav-item">-->
+<!--                        <a class="nav-link" href="{{ url_for('admin.wallets') }}">Wallets</a>-->
+<!--                    </li>-->
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+<!-- static/css/admin.css -->
+.card {
+    margin-bottom: 1rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.status-active { background-color: #d4edda; color: #155724; }
+.status-suspended { background-color: #f8d7da; color: #721c24; }
+.status-pending { background-color: #fff3cd; color: #856404; }
+
+.table-responsive {
+    margin-bottom: 1rem;
+}
+
+.action-buttons {
+    white-space: nowrap;
+}
+
+.filters-form {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+/* static/js/admin.js */
+function confirmAction(message) {
+    return confirm(message || 'Are you sure you want to perform this action?');
+}
+
+function handleAjaxError(error) {
+    console.error('Ajax error:', error);
+    alert('An error occurred. Please try again.');
+}
+
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+
+    // Handle ajax form submissions
+    $('.ajax-form').on('submit', function(e) {
+        e.preventDefault();
+        let form = $(this);
+
+        $.ajax({
+            url: form.attr('action'),
+            method: form.attr('method'),
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || 'Operation failed');
+                }
+            },
+            error: handleAjaxError
+        });
+    });
+});

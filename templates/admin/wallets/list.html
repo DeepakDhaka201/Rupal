@@ -1,0 +1,116 @@
+<!-- templates/admin/wallets/list.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Wallet Pool Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Wallet Pool Management</h1>
+    <a href="{{ url_for('admin.wallet.add_wallet') }}" class="btn btn-primary">Add New Wallet</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="filters-form">
+            <div class="row">
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status in WalletStatus %}
+                        <option value="{{ status.name }}" {% if request.args.get('status') == status.name %}selected{% endif %}>
+                            {{ status.value }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary">Filter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Address</th>
+                <th>Status</th>
+                <th>Total Assignments</th>
+                <th>Total Deposits</th>
+                <th>Last Used</th>
+                <th>Current Assignment</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for wallet in wallets.items %}
+            <tr>
+                <td>{{ wallet.address }}</td>
+                <td>
+                    <span class="badge bg-{{ wallet.status.name|lower }}">
+                        {{ wallet.status.value }}
+                    </span>
+                </td>
+                <td>{{ wallet.total_assignments }}</td>
+                <td>{{ wallet.total_deposits }} ({{ "%.2f"|format(wallet.total_deposit_amount) }} USDT)</td>
+                <td>{{ wallet.last_used_at|default('Never', true)|datetime }}</td>
+                <td>
+                    {% if wallet.id in active_assignments %}
+                    {% set assignment = active_assignments[wallet.id] %}
+                    <small>
+                        Assigned to: {{ assignment.user.mobile }}<br>
+                        Expires: {{ assignment.expires_at|datetime }}
+                    </small>
+                    {% else %}
+                    No active assignment
+                    {% endif %}
+                </td>
+                <td class="action-buttons">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('admin.wallet.view_assignments', wallet_id=wallet.id) }}">
+                                    View Assignments
+                                </a>
+                            </li>
+                            {% if wallet.status != WalletStatus.DISABLED %}
+                            <li>
+                                <form action="{{ url_for('admin.wallet.update_status', wallet_id=wallet.id) }}"
+                                      method="POST" class="ajax-form">
+                                    <input type="hidden" name="status" value="DISABLED">
+                                    <button type="submit" class="dropdown-item text-danger"
+                                            onclick="return confirmAction('Are you sure you want to disable this wallet?')">
+                                        Disable Wallet
+                                    </button>
+                                </form>
+                            </li>
+                            {% else %}
+                            <li>
+                                <form action="{{ url_for('admin.wallet.update_status', wallet_id=wallet.id) }}"
+                                      method="POST" class="ajax-form">
+                                    <input type="hidden" name="status" value="AVAILABLE">
+                                    <button type="submit" class="dropdown-item text-success">
+                                        Enable Wallet
+                                    </button>
+                                </form>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{{ render_pagination(wallets) }}
+{% endblock %}
+
+
+

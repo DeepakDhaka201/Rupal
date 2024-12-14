@@ -1,0 +1,92 @@
+<!-- templates/admin/rates/edit.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Rate{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Edit Rate</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Transaction Type</label>
+                        <select class="form-select" name="transaction_type" required>
+                            <option value="BUY" {% if rate.transaction_type == 'BUY' %}selected{% endif %}>Buy</option>
+                            <option value="SELL" {% if rate.transaction_type == 'SELL' %}selected{% endif %}>Sell</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Mode</label>
+                        <select class="form-select" name="payment_mode" required>
+                            {% for mode in payment_modes %}
+                            <option value="{{ mode.value }}"
+                                {% if rate.payment_mode == mode %}selected{% endif %}>
+                                {{ mode.value }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Min Amount (INR)</label>
+                        <input type="number" class="form-control" name="min_amount_inr"
+                               value="{{ "%.2f"|format(rate.min_amount_inr) }}"
+                               min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Max Amount (INR)</label>
+                        <input type="number" class="form-control" name="max_amount_inr"
+                               value="{{ "%.2f"|format(rate.max_amount_inr) }}"
+                               min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Rate (INR per USDT)</label>
+                        <input type="number" class="form-control" name="rate"
+                               value="{{ "%.2f"|format(rate.rate) }}"
+                               min="0" step="0.01" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Update Rate</button>
+                <a href="{{ url_for('admin_rates.rates_list') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const minInput = form.querySelector('[name="min_amount_inr"]');
+    const maxInput = form.querySelector('[name="max_amount_inr"]');
+
+    form.addEventListener('submit', function(event) {
+        const min = parseFloat(minInput.value);
+        const max = parseFloat(maxInput.value);
+
+        if (min >= max) {
+            event.preventDefault();
+            alert('Maximum amount must be greater than minimum amount');
+        }
+    });
+});
+</script>
+{% endblock %}
