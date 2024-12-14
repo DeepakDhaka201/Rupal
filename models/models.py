@@ -103,6 +103,7 @@ class Transaction(db.Model):
     payment_reference = db.Column(db.String(50))
     payment_proof = db.Column(db.String(200))
     wallet_assignment_id = db.Column(db.Integer, db.ForeignKey('wallet_assignment.id'))
+    claim_id = db.Column(db.Integer, db.ForeignKey('claim.id'))
 
     # Timestamps and metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -115,6 +116,7 @@ class Transaction(db.Model):
     user = db.relationship('User', backref='transactions')
     bank_account = db.relationship('BankAccount', backref='transactions')
     wallet_assignment = db.relationship('WalletAssignment', backref='transactions')
+    claim = db.relationship('Claim', backref='transactions')
 
 
 # models/bank.py
@@ -168,3 +170,70 @@ class OTP(db.Model):
     purpose = db.Column(db.String(20), nullable=False)  # LOGIN, SIGNUP, WITHDRAWAL
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_verified = db.Column(db.Boolean, default=False)
+
+
+class PaymentMode(Enum):
+    ONLINE_TRANSFER = 'Online Bank Transfer'
+    CASH_DEPOSIT = 'Cash Deposit via CDM'
+    CASH_DELIVERY = 'Cash Delivery'
+
+    @classmethod
+    def from_value(cls, payment_mode_val):
+        if 'Online Bank Transfer' == payment_mode_val:
+            return PaymentMode.ONLINE_TRANSFER
+        elif 'Cash Deposit via CDM' == payment_mode_val:
+            return PaymentMode.CASH_DEPOSIT
+        elif 'Cash Delivery' == payment_mode_val:
+            return PaymentMode.CASH_DELIVERY
+        else:
+            raise ValueError('Invalid payment mode')
+
+
+class ExchangeRate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    transaction_type = db.Column(db.String(10), nullable=False)  # BUY/SELL
+    payment_mode = db.Column(db.Enum(PaymentMode), nullable=False)
+    min_amount_inr = db.Column(db.Float, nullable=False)  # INR amount
+    max_amount_inr = db.Column(db.Float, nullable=False)  # INR amount
+    rate = db.Column(db.Float, nullable=False)  # Rate for this slab
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('transaction_type', 'payment_mode', 'min_amount_inr', 'max_amount_inr', name='unique_slab'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'transaction_type': self.transaction_type,
+            'payment_mode': self.payment_mode.value,
+            'min_amount': self.min_amount,
+            'max_amount': self.max_amount,
+            'rate': self.rate
+        }
+
+
+class Claim(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    bank_name = db.Column(db.String(100), nullable=False)
+    account_number = db.Column(db.String(50), nullable=False)
+    ifsc_code = db.Column(db.String(20), nullable=False)
+    account_holder = db.Column(db.String(100), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    amount_inr = db.Column(db.Float, nullable=False)
+
+    # Claim tracking
+    claimed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    claimed_at = db.Column(db.DateTime)
+    expires_at = db.Column(db.DateTime)
+    status = db.Column(db.String(20), default='AVAILABLE')  # AVAILABLE, CLAIMED, EXPIRED
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.Index('idx_claim_status', 'status', 'claimed_by'),
+        db.Index('idx_active_claims', 'claimed_by', 'status', 'expires_at')
+    )

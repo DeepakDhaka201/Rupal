@@ -9,11 +9,12 @@ import qrcode
 import requests
 from datetime import datetime, timedelta
 from flask import current_app, url_for
+from sqlalchemy import and_
 
 from werkzeug.utils import secure_filename
 
 from models import db
-from models.models import User, ReferralCommission, TransactionType, ReferralEarning
+from models.models import User, ReferralCommission, TransactionType, ReferralEarning, PaymentMode, ExchangeRate
 
 
 class TransactionUtil:
@@ -43,26 +44,54 @@ class TransactionUtil:
         }
 
     @staticmethod
-    def get_current_rate(rate_type='buy', payment_mode='Cash Deposit via CDM', amount_inr=0.0):
+    def get_current_rate(transaction_type='BUY', payment_mode='CASH_DEPOSIT', amount_inr=0.0):
         """
-        Get current USDT rate for buy/sell
-        rate_type: 'buy' or 'sell'
-        """
+           Find applicable exchange rate based on type, payment mode and amount
+           Args:
+               transaction_type: BUY/SELL
+               payment_mode: ONLINE_TRANSFER/CASH_DEPOSIT
+               amount_inr: Amount in INR
+
+           Returns:
+               ExchangeRate object if found
+
+           Raises:
+               ValueError: If no matching rate found or invalid inputs
+           """
         try:
-            rates = {
-                'buy': {
-                        "Online Bank Transfer": 96.50,
-                        "Cash Deposit via CDM": 89.50
-                    },
-                'sell': {
-                    "Online Bank Transfer": 94.50,
-                    "Cash Deposit via CDM": 88.50
-                }
-            }
-            return rates[rate_type][payment_mode]
+            # Validate inputs
+            if transaction_type not in ['BUY', 'SELL']:
+                raise ValueError('Invalid transaction type')
+
+            try:
+                payment_mode = PaymentMode(payment_mode.upper())
+            except ValueError:
+                raise ValueError('Invalid payment mode')
+
+            if not isinstance(amount_inr, (int, float)) or amount_inr <= 0:
+                raise ValueError('Invalid amount')
+
+            # Find matching rate
+            rate = ExchangeRate.query.filter(
+                and_(
+                    ExchangeRate.transaction_type == transaction_type,
+                    ExchangeRate.payment_mode == payment_mode,
+                    ExchangeRate.min_amount <= amount_inr,
+                    ExchangeRate.max_amount >= amount_inr,
+                    ExchangeRate.is_active == True
+                )
+            ).first()
+
+            if not rate:
+                raise ValueError(
+                    f'No rate found for {transaction_type} with {payment_mode.value} for amount {amount_inr}')
+
+            return rate
+
         except Exception as e:
-            current_app.logger.error(f"Rate fetch error: {str(e)}")
-            return current_app.config.get('DEFAULT_USDT_RATE', 85.50)
+            if isinstance(e, ValueError):
+                raise
+            raise ValueError(f'Error finding rate: {str(e)}')
 
     @staticmethod
     def validate_tron_address(address):

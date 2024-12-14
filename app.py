@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 
+from admin.routes.transactions import admin_transactions_bp
+from admin.routes.users import admin_users_bp
 from config import Config
 from models import db
 import logging
@@ -25,7 +27,6 @@ def create_app(config_class=Config):
     from referral.routes import referral_bp
     from transaction.routes import transaction_bp
     from bank.routes import bank_bp
-    from admin.routes import admin_bp
     from user.routes import user_bp
 
     app.url_map.strict_slashes = False
@@ -34,9 +35,11 @@ def create_app(config_class=Config):
     app.register_blueprint(dashboard_bp, url_prefix='/api/v1/dashboard')
     app.register_blueprint(transaction_bp, url_prefix='/api/v1/transaction')
     app.register_blueprint(bank_bp, url_prefix='/api/v1/bank')
-    app.register_blueprint(admin_bp, url_prefix='/api/v1/admin')
     app.register_blueprint(referral_bp, url_prefix='/api/v1/referral')
     app.register_blueprint(user_bp, url_prefix='/api/v1/user')
+
+    app.register_blueprint(admin_users_bp, url_prefix='/admin_users')
+    app.register_blueprint(admin_transactions_bp, url_prefix='/admin_transactions')
 
     # Set up logging
     if not app.debug and not app.testing:

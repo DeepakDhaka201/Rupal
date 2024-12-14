@@ -1,7 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import current_app
 
-from models.models import db, PooledWallet, WalletAssignment, Transaction, TransactionStatus, User
+from models.models import db, PooledWallet, WalletAssignment, Transaction, TransactionStatus, User, Claim
 from datetime import datetime, timedelta
 from transaction.utils import TransactionUtil
 import requests
@@ -17,8 +17,8 @@ class DepositMonitor:
             # Get both active and expired assignments
             assignments = (WalletAssignment.query
                            .filter(
-                                WalletAssignment.is_active == True
-                             )
+                WalletAssignment.is_active == True
+            )
                            .with_for_update()
                            .all())
 
@@ -149,9 +149,7 @@ class DepositMonitor:
                 txn_timestamp = datetime.fromtimestamp(txn['timestamp'] / 1000)
 
                 # Only process if transaction was made during assignment period
-                if (txn_timestamp >= assignment.assigned_at and
-                        txn_timestamp <= assignment.expires_at):
-
+                if assignment.assigned_at <= txn_timestamp <= assignment.expires_at:
                     if not Transaction.query.filter_by(blockchain_txn_id=txn['hash']).first():
                         if self._verify_transaction(txn, assignment):
                             self._process_transaction(assignment, txn)
@@ -167,6 +165,38 @@ class DepositMonitor:
             current_app.logger.error(f"Handle expired assignment error: {str(e)}")
 
 
+def cleanup_expired_claims():
+    try:
+        with db.session.begin_nested():
+            # Find and lock expired claims
+            expired_claims = (Claim.query
+                              .filter(
+                                    Claim.status == 'CLAIMED',
+                                    Claim.expires_at + timedelta(minutes=2) <= datetime.utcnow()
+                                )
+                              .with_for_update()
+                              .all())
+
+            for claim in expired_claims:
+                claim.status = 'AVAILABLE'
+                claim.claimed_by = None
+                claim.claimed_at = None
+                claim.expires_at = None
+
+                # Update associated transaction if exists
+
+                transaction = Transaction.query.get(claim_id=claim.id)
+                if transaction and transaction.status == TransactionStatus.PENDING:
+                    transaction.status = TransactionStatus.CANCELLED
+                    transaction.error_message = 'Claim expired'
+
+            db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Claim cleanup error: {str(e)}")
+
+
 # scheduler/tasks.py
 def setup_wallet_monitoring(app):
     """Setup wallet monitoring tasks"""
@@ -178,6 +208,22 @@ def setup_wallet_monitoring(app):
         monitor.monitor_active_assignments,
         'interval',
         seconds=2
+    )
+
+    scheduler.start()
+    return scheduler
+
+
+def setup_claim_monitoring(app):
+    """Setup wallet monitoring tasks"""
+    scheduler = BackgroundScheduler()
+    monitor = DepositMonitor()
+
+    # Check for deposits every minute
+    scheduler.add_job(
+        cleanup_expired_claims,
+        'interval',
+        seconds=30
     )
 
     scheduler.start()

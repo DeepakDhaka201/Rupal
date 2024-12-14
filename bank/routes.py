@@ -28,6 +28,7 @@ def get_accounts(current_user):
                 'account_holder': account.account_holder,
                 'account_number': account.account_number,
                 'ifsc_code': account.ifsc_code,
+                'is_active': True,
                 'is_verified': account.is_verified,
                 'is_primary': account.is_primary,
                 'type': account.account_type,
