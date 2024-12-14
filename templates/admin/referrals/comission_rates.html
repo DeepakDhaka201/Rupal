@@ -1,0 +1,183 @@
+<!-- templates/admin/referrals/commission_rates.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Commission Rates{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Commission Rates</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCommissionModal">
+        Add New Rate
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Level</th>
+                        <th>Buy Commission</th>
+                        <th>Sell Commission</th>
+                        <th>Min Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rate in rates %}
+                    <tr>
+                        <td>Level {{ rate.level }}</td>
+                        <td>{{ rate.buy_commission_percent }}%</td>
+                        <td>{{ rate.sell_commission_percent }}%</td>
+                        <td>{{ rate.min_amount_usdt }} USDT</td>
+                        <td>
+                            <span class="badge {% if rate.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ 'Active' if rate.is_active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary"
+                                    onclick="editCommission({{ rate.id }})">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Commission Modal -->
+<div class="modal fade" id="addCommissionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin.referral.add_commission') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Commission Rate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Level</label>
+                        <input type="number" name="level" class="form-control" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Buy Commission (%)</label>
+                        <input type="number" name="buy_commission" class="form-control" required
+                               step="0.01" min="0" max="100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sell Commission (%)</label>
+                        <input type="number" name="sell_commission" class="form-control" required
+                               step="0.01" min="0" max="100">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Min Amount (USDT)</label>
+                        <input type="number" name="min_amount" class="form-control" required
+                               step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Rate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Commission Modal -->
+<div class="modal fade" id="editCommissionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editCommissionForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Commission Rate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Fields will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+// static/js/referral-admin.js
+function editCommission(id) {
+    // Fetch commission data
+    fetch(`/admin/referrals/commissions/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            const modalBody = document.querySelector('#editCommissionModal .modal-body');
+            modalBody.innerHTML = `
+                <div class="mb-3">
+                    <label class="form-label">Buy Commission (%)</label>
+                    <input type="number" name="buy_commission" class="form-control" required
+                           step="0.01" min="0" max="100" value="${data.buy_commission_percent}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Sell Commission (%)</label>
+                    <input type="number" name="sell_commission" class="form-control" required
+                           step="0.01" min="0" max="100" value="${data.sell_commission_percent}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Min Amount (USDT)</label>
+                    <input type="number" name="min_amount" class="form-control" required
+                           step="0.01" min="0" value="${data.min_amount_usdt}">
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_active" class="form-check-input"
+                               id="is_active" ${data.is_active ? 'checked' : ''}>
+                        <label class="form-check-label" for="is_active">Active</label>
+                    </div>
+                </div>
+            `;
+
+            const form = document.getElementById('editCommissionForm');
+            form.action = `/admin/referrals/commissions/${id}/edit`;
+
+            const modal = new bootstrap.Modal(document.getElementById('editCommissionModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load commission data');
+        });
+}
+
+// Handle commission form submission
+document.getElementById('editCommissionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to update commission');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update commission');
+    });
+});
+
+{% endblock %}

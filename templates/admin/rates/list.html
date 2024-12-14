@@ -1,0 +1,132 @@
+<!-- templates/admin/rates/list.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Exchange Rates Management{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Buy Rates</h4>
+        <a href="{{ url_for('admin_rates.add_rate') }}" class="btn btn-primary">Add New Rate</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Payment Mode</th>
+                        <th>Min Amount (₹)</th>
+                        <th>Max Amount (₹)</th>
+                        <th>Rate</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rate in buy_rates %}
+                    <tr>
+                        <td>{{ rate.payment_mode.value }}</td>
+                        <td>₹{{ "%.2f"|format(rate.min_amount_inr) }}</td>
+                        <td>₹{{ "%.2f"|format(rate.max_amount_inr) }}</td>
+                        <td>₹{{ "%.2f"|format(rate.rate) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if rate.is_active else 'danger' }}">
+                                {{ 'Active' if rate.is_active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>{{ rate.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('admin_rates.edit_rate', rate_id=rate.id) }}"
+                                   class="btn btn-sm btn-warning">Edit</a>
+                                <button type="button"
+                                        onclick="toggleRate({{ rate.id }}, {{ rate.is_active|tojson }})"
+                                        class="btn btn-sm {{ 'btn-danger' if rate.is_active else 'btn-success' }}">
+                                    {{ 'Deactivate' if rate.is_active else 'Activate' }}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Sell Rates</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Payment Mode</th>
+                        <th>Min Amount (₹)</th>
+                        <th>Max Amount (₹)</th>
+                        <th>Rate</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rate in sell_rates %}
+                    <tr>
+                        <td>{{ rate.payment_mode.value }}</td>
+                        <td>₹{{ "%.2f"|format(rate.min_amount_inr) }}</td>
+                        <td>₹{{ "%.2f"|format(rate.max_amount_inr) }}</td>
+                        <td>₹{{ "%.2f"|format(rate.rate) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if rate.is_active else 'danger' }}">
+                                {{ 'Active' if rate.is_active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>{{ rate.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('admin_rates.edit_rate', rate_id=rate.id) }}"
+                                   class="btn btn-sm btn-warning">Edit</a>
+                                <button type="button"
+                                        onclick="toggleRate({{ rate.id }}, {{ rate.is_active|tojson }})"
+                                        class="btn btn-sm {{ 'btn-danger' if rate.is_active else 'btn-success' }}">
+                                    {{ 'Deactivate' if rate.is_active else 'Activate' }}
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleRate(rateId, currentStatus) {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this rate?`)) {
+        return;
+    }
+
+    $.ajax({
+        url: `/admin/rates/${rateId}/toggle`,
+        method: 'POST',
+        success: function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert(response.message || 'Failed to update rate status');
+            }
+        },
+        error: function() {
+            alert('An error occurred while updating rate status');
+        }
+    });
+}
+</script>
+{% endblock %}

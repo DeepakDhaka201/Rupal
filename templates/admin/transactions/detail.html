@@ -1,0 +1,304 @@
+
+
+<!-- templates/admin/transactions/detail.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Transaction Details - {{ transaction.rupal_id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Transaction Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Rupal ID</dt>
+                            <dd class="col-sm-8">{{ transaction.rupal_id }}</dd>
+
+                            <dt class="col-sm-4">Type</dt>
+                            <dd class="col-sm-8">{{ transaction.transaction_type.value }}</dd>
+
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge status-{{ transaction.status.value.lower() }}">
+                                    {{ transaction.status.value }}
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-4">Amount USDT</dt>
+                            <dd class="col-sm-8">{{ "%.2f"|format(transaction.amount_usdt) }}</dd>
+
+                            <dt class="col-sm-4">Amount INR</dt>
+                            <dd class="col-sm-8">{{ "%.2f"|format(transaction.amount_inr) if transaction.amount_inr else '-' }}</dd>
+
+                            <dt class="col-sm-4">Exchange Rate</dt>
+                            <dd class="col-sm-8">{{ "%.2f"|format(transaction.exchange_rate) if transaction.exchange_rate else '-' }}</dd>
+
+                            <dt class="col-sm-4">Fee USDT</dt>
+                            <dd class="col-sm-8">{{ "%.2f"|format(transaction.fee_usdt) if transaction.fee_usdt else '-' }}</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Created At</dt>
+                            <dd class="col-sm-8">{{ transaction.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+
+                            <dt class="col-sm-4">Updated At</dt>
+                            <dd class="col-sm-8">{{ transaction.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
+
+                            <dt class="col-sm-4">Completed At</dt>
+                            <dd class="col-sm-8">
+                                {{ transaction.completed_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.completed_at else '-' }}
+                            </dd>
+
+                            <dt class="col-sm-4">Payment Mode</dt>
+                            <dd class="col-sm-8">{{ transaction.payment_mode or '-' }}</dd>
+
+                            <dt class="col-sm-4">Payment Ref</dt>
+                            <dd class="col-sm-8">{{ transaction.payment_reference or '-' }}</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                {% if transaction.error_message or transaction.admin_notes %}
+                <div class="mt-3">
+                    {% if transaction.error_message %}
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> {{ transaction.error_message }}
+                    </div>
+                    {% endif %}
+
+                    {% if transaction.admin_notes %}
+                    <div class="alert alert-info">
+                        <strong>Admin Notes:</strong> {{ transaction.admin_notes }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- User Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">User Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Name</dt>
+                    <dd class="col-sm-9">{{ transaction.user.name }}</dd>
+
+                    <dt class="col-sm-3">Mobile</dt>
+                    <dd class="col-sm-9">{{ transaction.user.mobile }}</dd>
+
+                    <dt class="col-sm-3">Current Balance</dt>
+                    <dd class="col-sm-9">{{ "%.2f"|format(transaction.user.wallet_balance) }} USDT</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Bank Account Details -->
+        {% if transaction.bank_account %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Bank Account Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Account Holder</dt>
+                    <dd class="col-sm-9">{{ transaction.bank_account.account_holder }}</dd>
+
+                    <dt class="col-sm-3">Account Number</dt>
+                    <dd class="col-sm-9">{{ transaction.bank_account.account_number }}</dd>
+
+                    <dt class="col-sm-3">IFSC Code</dt>
+                    <dd class="col-sm-9">{{ transaction.bank_account.ifsc_code }}</dd>
+
+                    <dt class="col-sm-3">Bank Name</dt>
+                    <dd class="col-sm-9">{{ transaction.bank_account.bank_name }}</dd>
+
+                    <dt class="col-sm-3">Account Type</dt>
+                    <dd class="col-sm-9">{{ transaction.bank_account.account_type }}</dd>
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Claim Details -->
+        {% if transaction.claim %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Claim Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Claim ID</dt>
+                    <dd class="col-sm-9">{{ transaction.claim.id }}</dd>
+
+                    <dt class="col-sm-3">Amount INR</dt>
+                    <!-- Continuing templates/admin/transactions/detail.html -->
+                    <dd class="col-sm-9">₹{{ "%.2f"|format(transaction.claim.amount_inr) }}</dd>
+
+                    <dt class="col-sm-3">Status</dt>
+                    <dd class="col-sm-9">{{ transaction.claim.status }}</dd>
+
+                    <dt class="col-sm-3">Claimed At</dt>
+                    <dd class="col-sm-9">{{ transaction.claim.claimed_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.claim.claimed_at else '-' }}</dd>
+
+                    <dt class="col-sm-3">Expires At</dt>
+                    <dd class="col-sm-9">{{ transaction.claim.expires_at.strftime('%Y-%m-%d %H:%M:%S') if transaction.claim.expires_at else '-' }}</dd>
+
+                    <dt class="col-sm-3">Bank Details</dt>
+                    <dd class="col-sm-9">
+                        {{ transaction.claim.bank_name }}<br>
+                        {{ transaction.claim.account_holder }}<br>
+                        {{ transaction.claim.account_number }}<br>
+                        {{ transaction.claim.ifsc_code }}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Blockchain Details -->
+        {% if transaction.blockchain_txn_id %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Blockchain Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Transaction Hash</dt>
+                    <dd class="col-sm-9">
+                        <a href="https://tronscan.org/#/transaction/{{ transaction.blockchain_txn_id }}"
+                           target="_blank">{{ transaction.blockchain_txn_id }}</a>
+                    </dd>
+
+                    <dt class="col-sm-3">From Address</dt>
+                    <dd class="col-sm-9">{{ transaction.from_address or '-' }}</dd>
+
+                    <dt class="col-sm-3">To Address</dt>
+                    <dd class="col-sm-9">{{ transaction.to_address or '-' }}</dd>
+                </dl>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Payment Proof -->
+        {% if transaction.payment_proof %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Payment Proof</h5>
+            </div>
+            <div class="card-body">
+                <img src="{{ url_for('static', filename='uploads/' + transaction.payment_proof) }}"
+                     class="img-fluid" alt="Payment Proof">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Status Update Panel -->
+    <div class="col-md-4">
+        <div class="card sticky-top">
+            <div class="card-header">
+                <h5 class="mb-0">Update Status</h5>
+            </div>
+            <div class="card-body">
+                {% if transaction.status.value in ['PENDING', 'PROCESSING'] %}
+                <form id="updateStatusForm">
+                    <div class="mb-3">
+                        <label class="form-label">Current Status</label>
+                        <input type="text" class="form-control" value="{{ transaction.status.value }}" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">New Status</label>
+                        <select class="form-select" name="status" required>
+                            <option value="">Select Status</option>
+                            <option value="COMPLETED">Complete</option>
+                            <option value="CANCELLED">Cancel</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Admin Notes</label>
+                        <textarea class="form-control" name="admin_notes" rows="3"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </form>
+                {% else %}
+                <div class="alert alert-info">
+                    This transaction is already {{ transaction.status.value.lower() }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Status Update Form Handler
+    $('#updateStatusForm').on('submit', function(e) {
+        e.preventDefault();
+
+        const newStatus = $('select[name="status"]').val();
+        const adminNotes = $('textarea[name="admin_notes"]').val();
+
+        if (!confirm(`Are you sure you want to mark this transaction as ${newStatus}?`)) {
+            return;
+        }
+
+        $.ajax({
+            url: `{{ url_for('admin_transactions.update_transaction_status', transaction_id=transaction.id) }}`,
+            method: 'POST',
+            data: {
+                status: newStatus,
+                admin_notes: adminNotes
+            },
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to update status: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('An error occurred while updating status');
+            }
+        });
+    });
+});
+
+// Function for quick status updates from list view
+function updateTransactionStatus(transactionId, status) {
+    if (!confirm(`Are you sure you want to mark this transaction as ${status}?`)) {
+        return;
+    }
+
+    $.ajax({
+        url: `/admin/transactions/${transactionId}/update-status`,
+        method: 'POST',
+        data: { status: status },
+        success: function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert('Failed to update status: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('An error occurred while updating status');
+        }
+    });
+}
+</script>
+{% endblock %}

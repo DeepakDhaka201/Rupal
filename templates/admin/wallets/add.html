@@ -1,0 +1,25 @@
+<!-- templates/admin/wallets/add.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Add New Wallet{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Add New Wallet</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="address" class="form-label">Wallet Address</label>
+                <input type="text" class="form-control" id="address" name="address" required
+                       pattern="^T[A-Za-z0-9]{33}$"
+                       title="Enter a valid TRON address">
+                <div class="form-text">Enter a valid TRON wallet address</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Wallet</button>
+            <a href="{{ url_for('admin.wallet.list_wallets') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+<!-- templates/admin/claims/list.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Claims Management{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Claims Management</h4>
+        <a href="{{ url_for('admin_claims.add_claim') }}" class="btn btn-primary">Add New Claim</a>
+    </div>
+    <div class="card-body">
+        <!-- Filters -->
+        <form class="row g-3 mb-4" method="GET">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="search"
+                    value="{{ search }}" placeholder="Search bank/account/holder">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="status">
+                    <option value="">All Status</option>
+                    <option value="AVAILABLE" {% if status == 'AVAILABLE' %}selected{% endif %}>Available</option>
+                    <option value="CLAIMED" {% if status == 'CLAIMED' %}selected{% endif %}>Claimed</option>
+                    <option value="COMPLETED" {% if status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                    <option value="DISABLED" {% if status == 'DISABLED' %}selected{% endif %}>Disabled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ url_for('admin_claims.claims_list') }}" class="btn btn-secondary">Reset</a>
+            </div>
+        </form>
+
+        <!-- Claims Table -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Bank Details</th>
+                        <th>Amount (₹)</th>
+                        <th>Status</th>
+                        <th>Claimed By</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for claim in claims.items %}
+                    <tr>
+                        <td>{{ claim.id }}</td>
+                        <td>
+                            {{ claim.bank_name }}<br>
+                            <small>{{ claim.account_holder }}</small><br>
+                            <small class="text-muted">{{ claim.account_number }}</small>
+                        </td>
+                        <td>₹{{ "%.2f"|format(claim.amount_inr) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if claim.is_active else 'danger' }}">
+                                {{ 'Active' if claim.is_active else 'Inactive' }}
+                            </span>
+                            <br>
+                            <small>{{ claim.status }}</small>
+                        </td>
+                        <td>
+                            {% if claim.claimed_by %}
+                                {{ claim.claimed_by }}<br>
+                                <small>{{ claim.claimed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ claim.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('admin_claims.claim_details', claim_id=claim.id) }}"
+                                   class="btn btn-sm btn-info">View</a>
+                                {% if claim.status not in ['CLAIMED', 'COMPLETED'] %}
+                                    <a href="{{ url_for('admin_claims.edit_claim', claim_id=claim.id) }}"
+                                       class="btn btn-sm btn-warning">Edit</a>
+                                    <button type="button"
+                                            onclick="toggleClaimStatus({{ claim.id }}, {{ claim.is_active|tojson }})"
+                                            class="btn btn-sm {{ 'btn-danger' if claim.is_active else 'btn-success' }}">
+                                        {{ 'Deactivate' if claim.is_active else 'Activate' }}
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% include 'admin/partials/pagination.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleClaimStatus(claimId, currentStatus) {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this claim?`)) {
+        return;
+    }
+
+    $.ajax({
+        url: `/admin/claims/${claimId}/update-status`,
+        method: 'POST',
+        data: {
+            is_active: !currentStatus
+        },
+        success: function(response) {
+            if (response.success) {
+                location.reload();
+            } else {
+                alert(response.message || 'Failed to update claim status');
+            }
+        },
+        error: function() {
+            alert('An error occurred while updating claim status');
+        }
+    });
+}
+</script>
+{% endblock %}
