@@ -76,8 +76,8 @@ class TransactionUtil:
                 and_(
                     ExchangeRate.transaction_type == transaction_type,
                     ExchangeRate.payment_mode == payment_mode,
-                    ExchangeRate.min_amount <= amount_inr,
-                    ExchangeRate.max_amount >= amount_inr,
+                    ExchangeRate.min_amount_inr <= amount_inr,
+                    ExchangeRate.max_amount_inr >= amount_inr,
                     ExchangeRate.is_active == True
                 )
             ).first()

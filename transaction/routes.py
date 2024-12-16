@@ -67,8 +67,8 @@ def get_all_rates(current_user):
 
             # Add rate to appropriate group
             response[tx_type][payment_mode].append({
-                "min_amount": rate.min_amount,
-                "max_amount": rate.max_amount,
+                "min_amount": rate.min_amount_inr,
+                "max_amount": rate.max_amount_inr,
                 "rate": rate.rate,
                 "slab_id": rate.id
             })
