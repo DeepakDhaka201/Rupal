@@ -40,7 +40,7 @@ def get_all_rates(current_user):
         ).order_by(
             ExchangeRate.transaction_type,
             ExchangeRate.payment_mode,
-            ExchangeRate.min_amount
+            ExchangeRate.min_amount_inr
         ).all()
 
         # Prepare response structure
@@ -147,7 +147,7 @@ def get_rates(current_user):
             ExchangeRate.is_active == True
         ).order_by(
             ExchangeRate.payment_mode,
-            ExchangeRate.min_amount
+            ExchangeRate.min_amount_inr
         ).all()
 
         # Group by payment mode
@@ -420,7 +420,7 @@ def initiate_buy2(current_user):
 @token_required
 def active_buy_transactions(current_user):
     try:
-        transaction_records = Transaction.query.filter_by(
+        transaction_records = Transaction.query.filter(
             Transaction.user_id == current_user.id,
             Transaction.transaction_type == TransactionType.BUY.name,
             Transaction.status == TransactionStatus.PENDING.name
