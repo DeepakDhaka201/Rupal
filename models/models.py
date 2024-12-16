@@ -209,8 +209,8 @@ class ExchangeRate(db.Model):
             'id': self.id,
             'transaction_type': self.transaction_type,
             'payment_mode': self.payment_mode.value,
-            'min_amount': self.min_amount,
-            'max_amount': self.max_amount,
+            'min_amount': self.min_amount_inr,
+            'max_amount': self.max_amount_inr,
             'rate': self.rate
         }
 
