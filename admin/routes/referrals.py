@@ -4,10 +4,10 @@ from models.models import db, User, ReferralCommission, ReferralEarning, Transac
 from sqlalchemy import func
 from datetime import datetime, timedelta
 
-referral_bp = Blueprint('referral', __name__, url_prefix='/admin/referrals')
+referral_admin_bp = Blueprint('admin_referral', __name__, url_prefix='/admin/referrals')
 
 
-@referral_bp.route('/')
+@referral_admin_bp.route('/')
 def dashboard():
     # Get overall statistics
     total_earnings = db.session.query(
@@ -41,13 +41,13 @@ def dashboard():
                            top_referrers=top_referrers)
 
 
-@referral_bp.route('/commissions')
+@referral_admin_bp.route('/commissions')
 def commission_rates():
     rates = ReferralCommission.query.order_by(ReferralCommission.level).all()
     return render_template('admin/referrals/commission_rates.html', rates=rates)
 
 
-@referral_bp.route('/commissions/add', methods=['POST'])
+@referral_admin_bp.route('/commissions/add', methods=['POST'])
 def add_commission():
     try:
         level = int(request.form.get('level'))
@@ -80,7 +80,7 @@ def add_commission():
         return redirect(url_for('admin.referral.commission_rates'))
 
 
-@referral_bp.route('/commissions/<int:commission_id>/edit', methods=['POST'])
+@referral_admin_bp.route('/commissions/<int:commission_id>/edit', methods=['POST'])
 def edit_commission(commission_id):
     commission = ReferralCommission.query.get_or_404(commission_id)
 
@@ -97,7 +97,7 @@ def edit_commission(commission_id):
         return jsonify({'success': False, 'message': 'Invalid values provided'}), 400
 
 
-@referral_bp.route('/earnings')
+@referral_admin_bp.route('/earnings')
 def earnings():
     page = request.args.get('page', 1, type=int)
     user_id = request.args.get('user_id', type=int)
@@ -119,7 +119,7 @@ def earnings():
                            earnings=earnings)
 
 
-@referral_bp.route('/tree/<int:user_id>')
+@referral_admin_bp.route('/tree/<int:user_id>')
 def referral_tree(user_id):
     user = User.query.get_or_404(user_id)
 

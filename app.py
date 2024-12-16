@@ -2,8 +2,12 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 
+from admin.routes.claims import admin_claims_bp
+from admin.routes.rates import admin_rates_bp
+from admin.routes.referrals import referral_admin_bp
 from admin.routes.transactions import admin_transactions_bp
 from admin.routes.users import admin_users_bp
+from admin.routes.wallet_routes import wallet_bp
 from config import Config
 from models import db
 import logging
@@ -40,6 +44,17 @@ def create_app(config_class=Config):
 
     app.register_blueprint(admin_users_bp, url_prefix='/admin_users')
     app.register_blueprint(admin_transactions_bp, url_prefix='/admin_transactions')
+    app.register_blueprint(admin_claims_bp, url_prefix='/admin_claims')
+    app.register_blueprint(admin_rates_bp, url_prefix='/admin_rates')
+    app.register_blueprint(referral_admin_bp, url_prefix='/admin/referrals')
+    app.register_blueprint(wallet_bp, url_prefix='/admin/wallets')
+
+    def format_datetime(value, format='%Y-%m-%d %H:%M'):
+        if value is None:
+            return ''
+        return value.strftime(format)
+
+    app.jinja_env.filters['datetime'] = format_datetime
 
     # Set up logging
     if not app.debug and not app.testing:

@@ -1,6 +1,6 @@
 # admin/routes/claims.py
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
-from models import db, Claim, Transaction
+from models.models import db, Claim, Transaction
 from sqlalchemy import desc
 from datetime import datetime, timedelta
 

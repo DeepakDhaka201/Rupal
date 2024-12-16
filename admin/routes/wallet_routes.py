@@ -36,13 +36,13 @@ def add_wallet():
 
         if not address:
             flash('Address is required', 'error')
-            return redirect(url_for('admin.wallet.add_wallet'))
+            return redirect(url_for('wallet.add_wallet'))
 
         # Check if wallet already exists
         existing_wallet = PooledWallet.query.filter_by(address=address).first()
         if existing_wallet:
             flash('Wallet address already exists', 'error')
-            return redirect(url_for('admin.wallet.add_wallet'))
+            return redirect(url_for('wallet.add_wallet'))
 
         wallet = PooledWallet(
             address=address,
@@ -54,7 +54,7 @@ def add_wallet():
         db.session.commit()
 
         flash('Wallet added successfully', 'success')
-        return redirect(url_for('admin.wallet.list_wallets'))
+        return redirect(url_for('wallet.list_wallets'))
 
     return render_template('admin/wallets/add.html')
 

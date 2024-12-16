@@ -1,5 +1,6 @@
 <!-- templates/admin/transactions/list.html -->
 {% extends "admin/base.html" %}
+{% from "admin/partials/pagination.html" import render_pagination %}  {# Import the macro #}
 
 {% block title %}Transactions Management{% endblock %}
 
@@ -101,7 +102,7 @@
         </div>
 
         <!-- Pagination -->
-        {% include 'admin/partials/pagination.html' %}
+        {{ render_pagination(transactions) }}
     </div>
 </div>
 {% endblock %}

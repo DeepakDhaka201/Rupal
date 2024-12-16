@@ -13,7 +13,7 @@ def rates_list():
         transaction_type='BUY',
         is_active=True
     ).order_by(
-        PaymentMode.name,
+        ExchangeRate.payment_mode,
         ExchangeRate.min_amount_inr
     ).all()
 
@@ -21,7 +21,7 @@ def rates_list():
         transaction_type='SELL',
         is_active=True
     ).order_by(
-        PaymentMode.name,
+        ExchangeRate.payment_mode,
         ExchangeRate.min_amount_inr
     ).all()
 

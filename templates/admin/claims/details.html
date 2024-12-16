@@ -140,7 +140,7 @@ function toggleClaimStatus(claimId, currentStatus) {
     }
 
     $.ajax({
-        url: `/admin/claims/${claimId}/update-status`,
+        url: `/admin_claims/claims/${claimId}/update-status`,
         method: 'POST',
         data: {
             is_active: !currentStatus
