@@ -447,7 +447,7 @@ def active_buy_transactions(current_user):
                     'bank_name': claim.bank_name
                 }
             })
-        return jsonify({"transactions": transactions, "showActive": True if len(transactions) > 0 else None}), 200
+        return jsonify({"transactions": transactions, "showActive": True if len(transactions) > 0 else None, "wallet_usdt": current_user.wallet_balance}), 200
     except Exception as e:
         print(traceback.format_exc())
         current_app.logger.error(f"Get buy active orders error: {str(e)}")
