@@ -297,6 +297,7 @@ def get_rates(current_user):
         return jsonify(data), 200
 
     except Exception as e:
+        traceback.print_exc()
         current_app.logger.error(f"Get rates error: {str(e)}")
         return jsonify({'error': 'Failed to get rates'}), 500
 
