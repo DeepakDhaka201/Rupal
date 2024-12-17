@@ -273,8 +273,8 @@ def get_rates(current_user):
                 grouped_rates[payment_mode] = []
 
             grouped_rates[payment_mode].append({
-                "min_amount": rate.min_amount,
-                "max_amount": rate.max_amount,
+                "min_amount": rate.min_amount_inr,
+                "max_amount": rate.max_amount_inr,
                 "rate": rate.rate,
                 "slab_id": rate.id
             })
