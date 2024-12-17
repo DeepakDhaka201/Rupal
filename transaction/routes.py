@@ -287,10 +287,8 @@ def get_rates(current_user):
 
         data = {
             "rates": grouped_rates,
-            "online_rates": grouped_rates[PaymentMode.ONLINE_TRANSFER.value] if grouped_rates[
-                PaymentMode.ONLINE_TRANSFER.value] else [],
-            "deposit_rates": grouped_rates[PaymentMode.CASH_DEPOSIT.value] if grouped_rates[
-                PaymentMode.CASH_DEPOSIT.value] else [],
+            "online_rates": grouped_rates.get(PaymentMode.ONLINE_TRANSFER.value, []),
+            "deposit_rates": grouped_rates.get(PaymentMode.CASH_DEPOSIT.value, []),
             "payment_modes": payment_modes
         }
 
