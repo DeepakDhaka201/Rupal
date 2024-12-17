@@ -717,6 +717,7 @@ def initiate_sell(current_user):
     """
     try:
         data = request.get_json()
+        print(data)
         if not data or not all(k in data for k in ['amount_inr', 'bank_account_id', 'payment_mode']):
             return jsonify({'error': 'All fields are required'}), 400
 
