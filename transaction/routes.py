@@ -735,7 +735,7 @@ def initiate_sell(current_user):
         rate = TransactionUtil.get_current_rate(TransactionType.SELL.value,
                                                 payment_mode=payment_mode,
                                                 amount_inr=amount_inr)
-        amount_usdt = round(amount_inr / rate, 2)
+        amount_usdt = round(amount_inr / rate.rate, 2)
 
         if current_user.wallet_balance < amount_usdt:
             return jsonify({'error': 'Insufficient balance'}), 400
@@ -757,7 +757,7 @@ def initiate_sell(current_user):
             payment_mode=payment_mode,
             amount_usdt=amount_usdt,
             amount_inr=amount_inr,
-            exchange_rate=rate,
+            exchange_rate=rate.rate,
             status=TransactionStatus.PROCESSING,
             bank_account_id=bank_account.id
         )
@@ -773,7 +773,7 @@ def initiate_sell(current_user):
                 'amount_usdt': amount_usdt,
                 'amount_inr': amount_inr,
                 'rupal_id': transaction.rupal_id,
-                'rate': rate,
+                'rate': rate.rate,
                 'payment_mode': payment_mode_val,
                 'status': transaction.status.value,
                 'display_status': TransactionUtil.get_status_display(transaction.status.value),
