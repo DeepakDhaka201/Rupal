@@ -726,6 +726,8 @@ def initiate_sell(current_user):
 
         payment_mode = PaymentMode.from_value(payment_mode_val).name
 
+        print(payment_mode)
+
         # Validate amount and balance
         if amount_inr < current_app.config['MIN_SELL_INR']:
             return jsonify({'error': f'Minimum sell amount is {current_app.config["MIN_SELL_INR"]} INR'}), 400
