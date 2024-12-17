@@ -13,6 +13,121 @@ from transaction.utils import TransactionUtil
 transaction_bp = Blueprint('transaction', __name__)
 
 
+@transaction_bp.route('/dashboard', methods=['GET'])
+@token_required
+def get_dashboard(current_user):
+    """
+    Get dashboard data including active transactions and rates
+    """
+    try:
+        # 1. Get Active Buy Transactions
+        transaction_records = Transaction.query.filter(
+            Transaction.user_id == current_user.id,
+            Transaction.transaction_type == TransactionType.BUY.name,
+            Transaction.status == TransactionStatus.PENDING.name
+        ).all()
+
+        active_transactions = []
+        for transaction in transaction_records:
+            claim = Claim.query.get(transaction.claim_id).first()
+            if claim:
+                active_transactions.append({
+                    'id': transaction.id,
+                    'rupal_id': transaction.rupal_id,
+                    'amount_inr': transaction.amount_inr,
+                    'amount_usdt': transaction.amount_usdt,
+                    'payment_mode': Transaction[transaction.payment_mode].value,
+                    'rate': transaction.rate,
+                    'payment_reference': transaction.payment_reference,
+                    'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
+                    'claim': {
+                        'id': claim.id,
+                        'status': claim.status,
+                        'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds()) * 1000,
+                        'account_name': claim.account_holder,
+                        'account_number': claim.account_number,
+                        'ifsc_code': claim.ifsc_code,
+                        'bank_name': claim.bank_name
+                    }
+                })
+
+        # 2. Get All Rates
+        rates = ExchangeRate.query.filter(
+            ExchangeRate.is_active == True
+        ).order_by(
+            ExchangeRate.transaction_type,
+            ExchangeRate.payment_mode,
+            ExchangeRate.min_amount_inr
+        ).all()
+
+        rates_response = {
+            'buy': {},
+            'sell': {},
+            'payment_modes': {
+                'buy': [],
+                'sell': []
+            }
+        }
+
+        last_updated = None
+
+        # Process rates
+        for rate in rates:
+            tx_type = rate.transaction_type.lower()
+            payment_mode = rate.payment_mode.value
+
+            if payment_mode not in rates_response[tx_type]:
+                rates_response[tx_type][payment_mode] = []
+                rates_response['payment_modes'][tx_type].append(payment_mode)
+
+            rates_response[tx_type][payment_mode].append({
+                "min_amount": rate.min_amount_inr,
+                "max_amount": rate.max_amount_inr,
+                "rate": rate.rate,
+                "slab_id": rate.id
+            })
+
+            if not last_updated or rate.updated_at > last_updated:
+                last_updated = rate.updated_at
+
+        # Ensure consistent payment modes
+        for tx_type in ['buy', 'sell']:
+            for payment_mode in PaymentMode:
+                if payment_mode.value not in rates_response[tx_type]:
+                    rates_response[tx_type][payment_mode.value] = []
+
+        formatted_time = TransactionUtil.format_created_at_to_ist(last_updated) if last_updated else "-"
+
+        # Combine everything into final response
+        return jsonify({
+            'wallet_usdt': current_user.wallet_balance,
+            'active_transactions': {
+                'transactions': active_transactions,
+                'showActive': len(active_transactions) > 0,
+            },
+            'rates': {
+                'buy': {
+                    'rates': rates_response['buy'],
+                    'online_rates': rates_response['buy'].get(PaymentMode.ONLINE_TRANSFER.value, []),
+                    'deposit_rates': rates_response['buy'].get(PaymentMode.CASH_DEPOSIT.value, []),
+                    'payment_modes': rates_response['payment_modes']['buy']
+                },
+                'sell': {
+                    'rates': rates_response['sell'],
+                    'online_rates': rates_response['sell'].get(PaymentMode.ONLINE_TRANSFER.value, []),
+                    'deposit_rates': rates_response['sell'].get(PaymentMode.CASH_DEPOSIT.value, []),
+                    'payment_modes': rates_response['payment_modes']['sell']
+                },
+                'updated_at': formatted_time
+            }
+        }), 200
+
+    except Exception as e:
+        print(traceback.format_exc())
+        current_app.logger.error(f"Dashboard error: {str(e)}")
+        return jsonify({'error': 'Failed to fetch dashboard data'}), 500
+
+
 @transaction_bp.route('/rates/all', methods=['GET'])
 @token_required
 def get_all_rates(current_user):
