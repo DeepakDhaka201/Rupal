@@ -179,11 +179,12 @@ class PaymentMode(Enum):
 
     @classmethod
     def from_value(cls, payment_mode_val):
-        if 'Online Bank Transfer' in payment_mode_val:
+        print(payment_mode_val)
+        if 'Online Bank Transfer' == payment_mode_val:
             return PaymentMode.ONLINE_TRANSFER
-        elif 'Cash Deposit via CDM' in payment_mode_val:
+        elif 'Cash Deposit via CDM' == payment_mode_val:
             return PaymentMode.CASH_DEPOSIT
-        elif 'Cash Delivery' in payment_mode_val:
+        elif 'Cash Delivery' == payment_mode_val:
             return PaymentMode.CASH_DELIVERY
         else:
             raise ValueError('Invalid payment mode')
