@@ -173,18 +173,18 @@ class OTP(db.Model):
 
 
 class PaymentMode(Enum):
-    ONLINE_TRANSFER = 'Online Bank Transfer'
-    CASH_DEPOSIT = 'Cash Deposit via CDM'
-    CASH_DELIVERY = 'Cash Delivery'
+    ONLINE_TRANSFER = "Online Bank Transfer"
+    CASH_DEPOSIT = "Cash Deposit via CDM"
+    CASH_DELIVERY = "Cash Delivery"
 
     @classmethod
     def from_value(cls, payment_mode_val):
         print(payment_mode_val)
-        if 'Online Bank Transfer' == payment_mode_val:
+        if "Online Bank Transfer" == payment_mode_val:
             return PaymentMode.ONLINE_TRANSFER
-        elif 'Cash Deposit via CDM' == payment_mode_val:
+        elif "Cash Deposit via CDM" == payment_mode_val:
             return PaymentMode.CASH_DEPOSIT
-        elif 'Cash Delivery' == payment_mode_val:
+        elif "Cash Delivery" == payment_mode_val:
             return PaymentMode.CASH_DELIVERY
         else:
             raise ValueError('Invalid payment mode')
