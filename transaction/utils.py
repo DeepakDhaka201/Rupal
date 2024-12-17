@@ -64,7 +64,7 @@ class TransactionUtil:
                 raise ValueError('Invalid transaction type')
 
             try:
-                payment_mode = PaymentMode(payment_mode.upper())
+                payment_mode = PaymentMode[payment_mode.upper()]
             except ValueError:
                 raise ValueError('Invalid payment mode')
 
