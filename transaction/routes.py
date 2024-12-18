@@ -1204,3 +1204,106 @@ def get_available_claims(current_user):
     except Exception as e:
         current_app.logger.error(f"Get claims error: {str(e)}")
         return jsonify({'error': 'Failed to fetch claims'}), 500
+
+
+@transaction_bp.route('/v2/claims', methods=['GET'])
+@token_required
+def get_claims(current_user):
+    """
+    Get both active claims (transactions) and available claims
+    Query params for available claims:
+    - sort: 1 (Amount ASC), 2 (Amount DESC), 3 (Recommended)
+    - bank_name: string (optional)
+    - amount_inr: float (optional, for recommended sorting)
+    """
+    try:
+        # First get active transactions (claims)
+        active_transactions = Transaction.query.filter(
+            Transaction.user_id == current_user.id,
+            Transaction.transaction_type == TransactionType.BUY.name,
+            Transaction.status == TransactionStatus.PENDING.name
+        ).all()
+
+        active_claims = []
+        for transaction in active_transactions:
+            claim = Claim.query.get(transaction.claim_id)
+            if claim:
+                active_claims.append({
+                    'transaction_id': transaction.id,
+                    'rupal_id': transaction.rupal_id,
+                    'amount_inr': transaction.amount_inr,
+                    'amount_usdt': transaction.amount_usdt,
+                    'payment_mode': Transaction[transaction.payment_mode].value if transaction.payment_mode else None,
+                    'rate': transaction.rate,
+                    'payment_reference': transaction.payment_reference,
+                    'created_at': transaction.created_at.isoformat(),
+                    'claim': {
+                        'id': claim.id,
+                        'status': claim.status,
+                        'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds() * 1000) if claim.expires_at else None,
+                        'account_holder': claim.account_holder,
+                        'account_number': claim.account_number,
+                        'ifsc_code': claim.ifsc_code,
+                        'bank_name': claim.bank_name
+                    }
+                })
+
+        # Then get available claims
+        sort_pattern = int(request.args.get('sort', SortPattern.RECOMMENDED.value))
+        bank_name = request.args.get('bank_name')
+        recommended_amount = float(request.args.get('amount_inr', 0))
+
+        # Base query for available claims
+        query = Claim.query.filter(
+            Claim.is_active == True,
+            Claim.status == 'AVAILABLE'
+        )
+
+        # Apply bank name filter if provided
+        if bank_name:
+            query = query.filter(Claim.bank_name == bank_name)
+
+        # Apply sorting
+        if sort_pattern == SortPattern.AMOUNT_ASC.value:
+            query = query.order_by(Claim.amount_inr.asc())
+        elif sort_pattern == SortPattern.AMOUNT_DESC.value:
+            query = query.order_by(Claim.amount_inr.desc())
+        elif sort_pattern == SortPattern.RECOMMENDED.value and recommended_amount > 0:
+            difference = func.abs(cast(Claim.amount_inr, Float) - recommended_amount)
+            query = query.order_by(difference.asc())
+
+        available_claims = query.all()
+
+        # Get unique bank names
+        bank_names = db.session.query(
+            Claim.bank_name
+        ).filter(
+            Claim.is_active == True,
+            Claim.status == 'AVAILABLE'
+        ).distinct().all()
+
+        return jsonify({
+            'transactions': active_claims,
+            'showActive': len(active_claims) > 0,
+            'wallet_usdt': current_user.wallet_balance,
+            'claims': [{
+                'id': claim.id,
+                'bank_name': claim.bank_name,
+                'account_number': claim.account_number,
+                'ifsc_code': claim.ifsc_code,
+                'account_holder': claim.account_holder,
+                'amount_inr': claim.amount_inr,
+                'status': claim.status,
+                'created_at': claim.created_at.isoformat()
+            } for claim in available_claims],
+            'bank_names': [name[0] for name in bank_names],
+            'sort_options': ["3", "2", "1"],
+            'sort_names': ["Recommended", "Amount Desc", "Amount Asc"]
+        }), 200
+
+    except ValueError as e:
+        return jsonify({'error': 'Invalid parameters provided'}), 400
+    except Exception as e:
+        current_app.logger.error(f"Get claims error: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': 'Failed to fetch claims'}), 500
