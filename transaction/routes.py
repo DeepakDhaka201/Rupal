@@ -1282,6 +1282,25 @@ def get_claims(current_user):
             Claim.status == 'AVAILABLE'
         ).distinct().all()
 
+        print({
+            'transactions': active_claims,
+            'showActive': len(active_claims) > 0,
+            'wallet_usdt': current_user.wallet_balance,
+            'claims': [{
+                'id': claim.id,
+                'bank_name': claim.bank_name,
+                'account_number': claim.account_number,
+                'ifsc_code': claim.ifsc_code,
+                'account_holder': claim.account_holder,
+                'amount_inr': claim.amount_inr,
+                'status': claim.status,
+                'created_at': claim.created_at.isoformat()
+            } for claim in available_claims],
+            'bank_names': [name[0] for name in bank_names],
+            'sort_options': ["3", "2", "1"],
+            'sort_names': ["Recommended", "Amount Desc", "Amount Asc"]
+        })
+
         return jsonify({
             'transactions': active_claims,
             'showActive': len(active_claims) > 0,
