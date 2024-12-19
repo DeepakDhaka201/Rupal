@@ -434,15 +434,12 @@ def initiate_buy2(current_user):
             print(request.get_json())# Create savepoint for rollback
             data = request.get_json()
             if not data:
-                db.session.rollback()
                 return jsonify({'error': 'Payload is required'}), 400
 
             if 'payment_mode' not in data:
-                db.session.rollback()
                 return jsonify({'error': 'Payment mode is required'}), 400
 
             if 'claim_id' not in data:
-                db.session.rollback()
                 return jsonify({'error': 'Kindly claim an option to continue'}), 400
 
             payment_mode_val = data['payment_mode']
@@ -459,7 +456,6 @@ def initiate_buy2(current_user):
                 return jsonify({'error': 'Invalid claim'}), 404
 
             if claim.status != 'AVAILABLE':
-                db.session.rollback()
                 return jsonify({'error': 'Invalid claim status'}), 400
 
             amount_inr = claim.amount_inr
