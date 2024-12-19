@@ -1147,6 +1147,7 @@ def get_available_claims(current_user):
     - amount_inr: float (optional, for recommended sorting)
     """
     try:
+        print(request.args)
         sort_pattern = int(request.args.get('sort', SortPattern.RECOMMENDED.value))
         bank_name = request.args.get('bank_name')
         recommended_amount = float(request.args.get('amount_inr', 0))
@@ -1216,6 +1217,7 @@ def get_available_claims(current_user):
         }), 200
 
     except ValueError:
+        traceback.print_exc()
         return jsonify({'error': 'Invalid sort pattern or amount'}), 400
     except Exception as e:
         current_app.logger.error(f"Get claims error: {str(e)}")
