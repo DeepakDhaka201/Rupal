@@ -1153,6 +1153,8 @@ def get_available_claims(current_user):
         else:
             sort_pattern = int(request.args.get('sort', SortPattern.RECOMMENDED.value))
         bank_name = request.args.get('bank_name')
+        if "All" == bank_name:
+            bank_name = None
         recommended_amount = float(request.args.get('amount_inr', 0))
 
         # Base query for available claims
@@ -1198,7 +1200,7 @@ def get_available_claims(current_user):
                 'status': claim.status,
                 'created_at': claim.created_at.isoformat()
             } for claim in claims],
-            'bank_names': [name[0] for name in bank_names],
+            'bank_names': ["All"].extend([name[0] for name in bank_names]),
             'sort_options': ["3", "2", "1"],  # 1 (Amount Asc), 2 (Amount Desc), 3 (Recommended)
             'sort_names': ["Recommended", "Amount Desc", "Amount Asc"]
         })
