@@ -1190,22 +1190,6 @@ def get_available_claims(current_user):
             Claim.status == 'AVAILABLE'
         ).distinct().all()
 
-        print({
-            'claims': [{
-                'id': claim.id,
-                'bank_name': claim.bank_name,
-                'account_number': claim.account_number,  # Mask account number
-                'ifsc_code': claim.ifsc_code,
-                'account_holder': claim.account_holder,
-                'amount_inr': claim.amount_inr,
-                'status': claim.status,
-                'created_at': claim.created_at.isoformat()
-            } for claim in claims],
-            'bank_names': ["All"].extend([name[0] for name in bank_names]),
-            'sort_options': ["3", "2", "1"],  # 1 (Amount Asc), 2 (Amount Desc), 3 (Recommended)
-            'sort_names': ["Recommended", "Amount Desc", "Amount Asc"]
-        })
-
         return jsonify({
             'claims': [{
                 'id': claim.id,
@@ -1217,7 +1201,7 @@ def get_available_claims(current_user):
                 'status': claim.status,
                 'created_at': claim.created_at.isoformat()
             } for claim in claims],
-            'bank_names': [name[0] for name in bank_names],
+            'bank_names': ["All"].extend([name[0] for name in bank_names]),
             'sort_options': ["3", "2", "1"],  # 1 (Amount Asc), 2 (Amount Desc), 3 (Recommended)
             'sort_names': ["Recommended", "Amount Desc", "Amount Asc"]
         }), 200
