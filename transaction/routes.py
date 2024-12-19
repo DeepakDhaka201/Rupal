@@ -1148,7 +1148,10 @@ def get_available_claims(current_user):
     """
     try:
         print(request.args)
-        sort_pattern = int(request.args.get('sort', SortPattern.RECOMMENDED.value))
+        if request.args.get('sort') == 'null':
+            sort_pattern = SortPattern.RECOMMENDED.value
+        else:
+            sort_pattern = int(request.args.get('sort', SortPattern.RECOMMENDED.value))
         bank_name = request.args.get('bank_name')
         recommended_amount = float(request.args.get('amount_inr', 0))
 
