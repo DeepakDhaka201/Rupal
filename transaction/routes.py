@@ -1146,7 +1146,6 @@ def get_available_claims(current_user):
     - amount_inr: float (optional, for recommended sorting)
     """
     try:
-        print(request.args)
         if request.args.get('sort') == 'null':
             sort_pattern = SortPattern.RECOMMENDED.value
         else:
