@@ -452,7 +452,6 @@ def initiate_buy2(current_user):
                      .first())
 
             if not claim:
-                db.session.rollback()
                 return jsonify({'error': 'Invalid claim'}), 404
 
             if claim.status != 'AVAILABLE':
@@ -462,7 +461,6 @@ def initiate_buy2(current_user):
 
             # Validate amount
             if amount_inr < current_app.config['MIN_BUY_INR']:
-                db.session.rollback()
                 return jsonify({'error': f'Minimum buy amount is {current_app.config["MIN_BUY_INR"]} INR'}), 400
 
             # Get current rate and calculate USDT amount
