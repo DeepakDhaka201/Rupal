@@ -462,10 +462,6 @@ def initiate_buy2(current_user):
                 db.session.rollback()
                 return jsonify({'error': 'Invalid claim status'}), 400
 
-            if datetime.utcnow() > claim.expires_at:
-                db.session.rollback()
-                return jsonify({'error': 'Claim has expired'}), 400
-
             amount_inr = claim.amount_inr
 
             # Validate amount
