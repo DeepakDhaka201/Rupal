@@ -475,7 +475,7 @@ def initiate_buy2(current_user):
                 payment_mode=payment_mode,
                 amount_inr=amount_inr
             )
-            amount_usdt = amount_inr / rate
+            amount_usdt = amount_inr / rate.rate
 
             claim.status = 'CLAIMED'
             claim.claimed_by = current_user.id
