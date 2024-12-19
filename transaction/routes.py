@@ -430,7 +430,8 @@ def initiate_buy2(current_user):
     }
     """
     try:
-        with db.session.begin_nested():  # Create savepoint for rollback
+        with db.session.begin_nested():
+            print(request.get_json())# Create savepoint for rollback
             data = request.get_json()
             if not data:
                 db.session.rollback()
@@ -526,6 +527,8 @@ def initiate_buy2(current_user):
 
     except Exception as e:
         db.session.rollback()
+        print(e)
+        traceback.print_exc()
         current_app.logger.error(f"Buy initiate error: {str(e)}")
         return jsonify({'error': 'Failed to initiate buy'}), 500
 
