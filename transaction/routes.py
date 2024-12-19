@@ -490,7 +490,7 @@ def initiate_buy2(current_user):
                 payment_mode=payment_mode,
                 amount_inr=round(amount_inr, 2),
                 amount_usdt=round(amount_usdt, 2),
-                exchange_rate=rate,
+                exchange_rate=rate.rate,
                 status=TransactionStatus.PENDING,
                 payment_reference=TransactionUtil.generate_payment_reference(),
                 claim_id=claim.id
@@ -506,7 +506,7 @@ def initiate_buy2(current_user):
                     'amount_inr': amount_inr,
                     'amount_usdt': round(amount_usdt, 2),
                     'payment_mode': payment_mode_val,
-                    'rate': rate,
+                    'rate': rate.rate,
                     'payment_reference': transaction.payment_reference,
                     'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
                     'claim': {
