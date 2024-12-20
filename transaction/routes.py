@@ -1092,19 +1092,20 @@ def get_transaction_details(current_user, transaction_id):
             user_id=current_user.id
         ).first_or_404()
 
-        return jsonify({
-            'transaction': {
+        transaction_details = {
                 'id': transaction.id,
+                'rupal_id': transaction.rupal_id,
                 'type': transaction.transaction_type.value,
                 'amount_usdt': transaction.amount_usdt,
                 'amount_inr': transaction.amount_inr,
                 'status': transaction.status.value,
-                'created_at': transaction.created_at.isoformat(),
-                'completed_at': transaction.completed_at.isoformat() if transaction.completed_at else None,
+                'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
+                'completed_at': TransactionUtil.format_created_at_to_ist(transaction.completed_at) if transaction.completed_at else None,
                 'blockchain_txn_id': transaction.blockchain_txn_id,
                 'exchange_rate': transaction.exchange_rate,
                 'fee_usdt': transaction.fee_usdt,
-                'bank_account': {
+                'bank_details': {
+                    'account_holder'
                     'account_number': transaction.bank_account.account_number,
                     'ifsc_code': transaction.bank_account.ifsc_code,
                     'bank_name': transaction.bank_account.bank_name
@@ -1113,7 +1114,19 @@ def get_transaction_details(current_user, transaction_id):
                     'from': transaction.from_address,
                     'to': transaction.to_address
                 } if (transaction.from_address or transaction.to_address) else None
+        }
+
+        claim = transaction.claim
+        if claim:
+            transaction_details['bank_details'] = {
+                'account_holder': claim.account_holder,
+                'account_number': claim.account_number,
+                'ifsc_code': claim.ifsc_code,
+                'bank_name': claim.bank
             }
+
+        return jsonify({
+            'transaction': transaction_details
         }), 200
 
     except Exception as e:
