@@ -516,7 +516,6 @@ def initiate_buy2(current_user):
             }), 200
 
     except Exception as e:
-        db.session.rollback()
         print(e)
         traceback.print_exc()
         current_app.logger.error(f"Buy initiate error: {str(e)}")
