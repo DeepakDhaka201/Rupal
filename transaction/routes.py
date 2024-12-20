@@ -571,7 +571,7 @@ def cancel_buy_transaction(current_user):
                 return jsonify({'error': 'Transaction ID is required'}), 400
 
             transaction_id = int(data['transaction_id'])
-            transaction = Transaction.query.get(transaction_id).first()
+            transaction = Transaction.query.get(transaction_id)
 
             if not transaction:
                 return jsonify({'error': 'Transaction not found'}), 400
@@ -582,7 +582,7 @@ def cancel_buy_transaction(current_user):
             if transaction.status == TransactionStatus.CANCELLED.name:
                 return jsonify({'error': 'Transaction is already cancelled'}), 400
 
-            claim = Claim.query.get(transaction.claim_id).first()
+            claim = Claim.query.get(transaction.claim_id)
 
             claim.claimed_by = None
             claim.claimed_at = None
@@ -630,7 +630,7 @@ def confirm_buy(current_user):
         if not proof_path:
             return jsonify({'error': 'Failed to save payment proof'}), 500
 
-        claim = Claim.query.get(transaction.claim_id).first()
+        claim = Claim.query.get(transaction.claim_id)
         claim.is_active = False
 
         # Update transaction
