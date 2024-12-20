@@ -1228,7 +1228,7 @@ def get_claims(current_user):
             claim = Claim.query.get(transaction.claim_id)
             if claim:
                 active_claims.append({
-                    'transaction_id': transaction.id,
+                    'id': transaction.id,
                     'rupal_id': transaction.rupal_id,
                     'amount_inr': transaction.amount_inr,
                     'amount_usdt': transaction.amount_usdt,
@@ -1240,7 +1240,7 @@ def get_claims(current_user):
                         'id': claim.id,
                         'status': claim.status,
                         'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds() * 1000) if claim.expires_at else None,
-                        'account_holder': claim.account_holder,
+                        'account_name': claim.account_holder,
                         'account_number': claim.account_number,
                         'ifsc_code': claim.ifsc_code,
                         'bank_name': claim.bank_name
@@ -1281,25 +1281,6 @@ def get_claims(current_user):
             Claim.status == 'AVAILABLE'
         ).distinct().all()
 
-        print({
-            'transactions': active_claims,
-            'showActive': len(active_claims) > 0,
-            'wallet_usdt': current_user.wallet_balance,
-            'claims': [{
-                'id': claim.id,
-                'bank_name': claim.bank_name,
-                'account_number': claim.account_number,
-                'ifsc_code': claim.ifsc_code,
-                'account_holder': claim.account_holder,
-                'amount_inr': claim.amount_inr,
-                'status': claim.status,
-                'created_at': claim.created_at.isoformat()
-            } for claim in available_claims],
-            'bank_names': [name[0] for name in bank_names],
-            'sort_options': ["3", "2", "1"],
-            'sort_names': ["Recommended", "Amount Desc", "Amount Asc"]
-        })
-
         return jsonify({
             'transactions': active_claims,
             'showActive': len(active_claims) > 0,
@@ -1309,7 +1290,7 @@ def get_claims(current_user):
                 'bank_name': claim.bank_name,
                 'account_number': claim.account_number,
                 'ifsc_code': claim.ifsc_code,
-                'account_holder': claim.account_holder,
+                'account_name': claim.account_holder,
                 'amount_inr': claim.amount_inr,
                 'status': claim.status,
                 'created_at': claim.created_at.isoformat()
