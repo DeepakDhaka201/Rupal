@@ -1055,7 +1055,7 @@ def get_transactions(current_user):
                 } if tx.bank_account else None
             }
 
-            if tx.transaction_type == TransactionType.BUY.value and tx.claim:
+            if tx.claim:
                 transaction['bank_details'] = {
                     'bank_name': tx.claim.bank_name,
                     'account_holder': tx.claim.account_holder,
