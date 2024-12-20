@@ -1060,7 +1060,7 @@ def get_transactions(current_user):
                     'bank_name': tx.claim.bank_name,
                     'account_holder': tx.claim.account_holder,
                     'account_number': tx.claim.account_number,
-                    'ifsc_code': tx.bank_account.ifsc_code
+                    'ifsc_code': tx.claim.ifsc_code
                 }
 
             if tx.transaction_type == TransactionType.WITHDRAW:
