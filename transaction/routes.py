@@ -1063,6 +1063,11 @@ def get_transactions(current_user):
                     'ifsc_code': tx.bank_account.ifsc_code
                 }
 
+            if tx.transaction_type == TransactionType.WITHDRAW:
+                transaction["addresses"] = {
+                    "to": tx.to_address
+                }
+
             data.append(transaction)
 
         return jsonify({
