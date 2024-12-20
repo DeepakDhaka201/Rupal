@@ -430,7 +430,7 @@ def initiate_buy2(current_user):
     }
     """
     try:
-        with db.session.begin():
+        with db.session.begin_nested():
             data = request.get_json()
             if not data:
                 return jsonify({'error': 'Payload is required'}), 400
