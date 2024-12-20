@@ -1234,7 +1234,7 @@ def get_claims(current_user):
                     'amount_inr': transaction.amount_inr,
                     'amount_usdt': transaction.amount_usdt,
                     'payment_mode': PaymentMode[transaction.payment_mode].value if transaction.payment_mode else None,
-                    'rate': transaction.rate,
+                    'rate': transaction.exchange_rate,
                     'payment_reference': transaction.payment_reference,
                     'created_at': transaction.created_at.isoformat(),
                     'claim': {
