@@ -29,7 +29,7 @@ def get_dashboard(current_user):
 
         active_transactions = []
         for transaction in transaction_records:
-            claim = Claim.query.get(transaction.claim_id).first()
+            claim = Claim.query.get(transaction.claim_id)
             if claim:
                 active_transactions.append({
                     'id': transaction.id,
