@@ -37,7 +37,7 @@ def get_dashboard(current_user):
                     'amount_inr': transaction.amount_inr,
                     'amount_usdt': transaction.amount_usdt,
                     'payment_mode': PaymentMode[transaction.payment_mode].value,
-                    'rate': transaction.rate,
+                    'rate': transaction.exchange_rate,
                     'payment_reference': transaction.payment_reference,
                     'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
                     'claim': {
