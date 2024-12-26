@@ -31,7 +31,7 @@ def login():
             return redirect(url_for('auth.login'))
 
         # Get user
-        user = User.query.filter_by(mobile=mobile).first()
+        user = User.query.filter_by(mobile=mobile, is_admin=True).first()
         if not user or not user.is_admin:
             flash('Unauthorized access', 'error')
             return redirect(url_for('auth.login'))
