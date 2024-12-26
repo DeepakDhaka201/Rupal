@@ -1198,6 +1198,7 @@ def get_available_claims(current_user):
             Claim.status == 'AVAILABLE'
         ).distinct().all()
 
+        print(["All"].extend([name[0] for name in bank_names]))
         return jsonify({
             'claims': [{
                 'id': claim.id,
@@ -1298,6 +1299,7 @@ def get_claims(current_user):
             Claim.status == 'AVAILABLE'
         ).distinct().all()
 
+        print(["All"].extend([name[0] for name in bank_names]))
         return jsonify({
             'transactions': active_claims,
             'showActive': len(active_claims) > 0,
