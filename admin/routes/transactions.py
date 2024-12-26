@@ -1,5 +1,7 @@
 # admin/routes/transactions.py
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+
+from auth.utils import admin_required
 from models.models import db, Transaction, TransactionType, TransactionStatus, Claim, PaymentMode
 from sqlalchemy import desc
 from datetime import datetime, timedelta
@@ -8,7 +10,8 @@ admin_transactions_bp = Blueprint('admin_transactions', __name__)
 
 
 @admin_transactions_bp.route('/transactions')
-def transactions_list():
+@admin_required
+def transactions_list(current_user):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
 
@@ -52,7 +55,8 @@ def transactions_list():
 
 
 @admin_transactions_bp.route('/transactions/<int:transaction_id>')
-def transaction_detail(transaction_id):
+@admin_required
+def transaction_detail(current_user, transaction_id):
     transaction = Transaction.query.get_or_404(transaction_id)
     return render_template('admin/transactions/detail.html',
                            transaction=transaction,

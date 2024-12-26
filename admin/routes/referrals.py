@@ -1,5 +1,7 @@
 # admin/referral_routes.py
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+
+from auth.utils import admin_required
 from models.models import db, User, ReferralCommission, ReferralEarning, Transaction
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -8,7 +10,8 @@ referral_admin_bp = Blueprint('admin_referral', __name__, url_prefix='/admin/ref
 
 
 @referral_admin_bp.route('/')
-def dashboard():
+@admin_required
+def dashboard(current_user):
     # Get overall statistics
     total_earnings = db.session.query(
         func.sum(ReferralEarning.amount_usdt)
@@ -42,13 +45,15 @@ def dashboard():
 
 
 @referral_admin_bp.route('/commissions')
-def commission_rates():
+@admin_required
+def commission_rates(current_user):
     rates = ReferralCommission.query.order_by(ReferralCommission.level).all()
     return render_template('admin/referrals/commission_rates.html', rates=rates)
 
 
 @referral_admin_bp.route('/commissions/add', methods=['POST'])
-def add_commission():
+@admin_required
+def add_commission(current_user):
     try:
         level = int(request.form.get('level'))
         buy_commission = float(request.form.get('buy_commission'))
@@ -81,7 +86,8 @@ def add_commission():
 
 
 @referral_admin_bp.route('/commissions/<int:commission_id>/edit', methods=['POST'])
-def edit_commission(commission_id):
+@admin_required
+def edit_commission(current_user, commission_id):
     commission = ReferralCommission.query.get_or_404(commission_id)
 
     try:
@@ -98,7 +104,8 @@ def edit_commission(commission_id):
 
 
 @referral_admin_bp.route('/earnings')
-def earnings():
+@admin_required
+def earnings(current_user):
     page = request.args.get('page', 1, type=int)
     user_id = request.args.get('user_id', type=int)
     from_date = request.args.get('from_date')
@@ -120,7 +127,8 @@ def earnings():
 
 
 @referral_admin_bp.route('/tree/<int:user_id>')
-def referral_tree(user_id):
+@admin_required
+def referral_tree(current_user, user_id):
     user = User.query.get_or_404(user_id)
 
     # Get direct referrals

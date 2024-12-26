@@ -1,7 +1,7 @@
 import random
 import string
 from functools import wraps
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, session, redirect, flash, url_for
 import jwt
 from datetime import datetime, timedelta
 import requests
@@ -97,7 +97,7 @@ def token_required(f):
     return decorated
 
 
-def admin_required(f):
+def admin_required2(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
@@ -152,3 +152,15 @@ def cleanup_expired_otps():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"OTP cleanup error: {str(e)}")
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or not session.get('is_admin'):
+            flash('Please login as admin', 'error')
+            return redirect(url_for('admin_auth.login'))
+
+        current_user = User.query.get(session.get('user_id'))
+        return f(current_user, *args, **kwargs)
+    return decorated_function

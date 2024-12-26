@@ -1,5 +1,7 @@
 # admin/routes/claims.py
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+
+from auth.utils import admin_required
 from models.models import db, Claim, Transaction
 from sqlalchemy import desc
 from datetime import datetime, timedelta
@@ -8,7 +10,8 @@ admin_claims_bp = Blueprint('admin_claims', __name__)
 
 
 @admin_claims_bp.route('/claims')
-def claims_list():
+@admin_required
+def claims_list(current_user):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     status = request.args.get('status')
@@ -37,7 +40,7 @@ def claims_list():
 
 
 @admin_claims_bp.route('/claims/add', methods=['GET', 'POST'])
-def add_claim():
+def add_claim(current_user):
     if request.method == 'POST':
         try:
             claim = Claim(
@@ -63,7 +66,7 @@ def add_claim():
 
 
 @admin_claims_bp.route('/claims/<int:claim_id>/edit', methods=['GET', 'POST'])
-def edit_claim(claim_id):
+def edit_claim(current_user, claim_id):
     claim = Claim.query.get_or_404(claim_id)
 
     if request.method == 'POST':
@@ -89,7 +92,7 @@ def edit_claim(claim_id):
 
 
 @admin_claims_bp.route('/claims/<int:claim_id>/update-status', methods=['POST'])
-def update_claim_status(claim_id):
+def update_claim_status(current_user, claim_id):
     claim = Claim.query.get_or_404(claim_id)
     new_status = request.form.get('is_active', '').lower() == 'true'
 
@@ -109,7 +112,7 @@ def update_claim_status(claim_id):
 
 
 @admin_claims_bp.route('/claims/<int:claim_id>/details')
-def claim_details(claim_id):
+def claim_details(current_user, claim_id):
     claim = Claim.query.get_or_404(claim_id)
 
     # Get associated transactions

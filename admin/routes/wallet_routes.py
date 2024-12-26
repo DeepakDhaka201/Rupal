@@ -1,5 +1,7 @@
 # admin/wallet_routes.py
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+
+from auth.utils import admin_required
 from models.models import db, PooledWallet, WalletAssignment, WalletStatus, User
 from datetime import datetime
 
@@ -7,7 +9,8 @@ wallet_bp = Blueprint('wallet', __name__, url_prefix='/admin/wallets')
 
 
 @wallet_bp.route('/')
-def list_wallets():
+@admin_required
+def list_wallets(current_user):
     status = request.args.get('status')
     page = request.args.get('page', 1, type=int)
 
@@ -30,7 +33,8 @@ def list_wallets():
 
 
 @wallet_bp.route('/add', methods=['GET', 'POST'])
-def add_wallet():
+@admin_required
+def add_wallet(current_user):
     if request.method == 'POST':
         address = request.form.get('address')
 
@@ -47,7 +51,7 @@ def add_wallet():
         wallet = PooledWallet(
             address=address,
             status=WalletStatus.AVAILABLE,
-            created_by=343
+            created_by=current_user.id
         )
 
         db.session.add(wallet)
@@ -60,7 +64,8 @@ def add_wallet():
 
 
 @wallet_bp.route('/<int:wallet_id>/status', methods=['POST'])
-def update_status(wallet_id):
+@admin_required
+def update_status(current_user, wallet_id):
     wallet = PooledWallet.query.get_or_404(wallet_id)
     status = request.form.get('status')
 
@@ -77,7 +82,8 @@ def update_status(wallet_id):
 
 
 @wallet_bp.route('/<int:wallet_id>/assignments')
-def view_assignments(wallet_id):
+@admin_required
+def view_assignments(current_user, wallet_id):
     wallet = PooledWallet.query.get_or_404(wallet_id)
     page = request.args.get('page', 1, type=int)
 

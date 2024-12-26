@@ -1,5 +1,7 @@
 # admin/routes/users.py
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+
+from auth.utils import admin_required
 from models.models import db, User, UserStatus, Transaction
 from sqlalchemy import desc
 from datetime import datetime
@@ -8,7 +10,8 @@ admin_users_bp = Blueprint('admin_users', __name__)
 
 
 @admin_users_bp.route('/users')
-def users_list():
+@admin_required
+def users_list(current_user):
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     search = request.args.get('search', '')
@@ -38,7 +41,8 @@ def users_list():
 
 
 @admin_users_bp.route('/users/<int:user_id>')
-def user_detail(user_id):
+@admin_required
+def user_detail(current_user, user_id):
     user = User.query.get_or_404(user_id)
     transactions = Transaction.query.filter_by(user_id=user_id) \
         .order_by(desc(Transaction.created_at)).limit(10).all()
@@ -59,7 +63,8 @@ def user_detail(user_id):
 
 
 @admin_users_bp.route('/users/<int:user_id>/toggle-status', methods=['POST'])
-def toggle_user_status(user_id):
+@admin_required
+def toggle_user_status(current_user, user_id):
     user = User.query.get_or_404(user_id)
 
     if user.status == UserStatus.ACTIVE:

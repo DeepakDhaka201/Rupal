@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+
+from auth.utils import admin_required
 from models.models import db, ExchangeRate, PaymentMode
 from sqlalchemy import desc
 from datetime import datetime
@@ -7,7 +9,8 @@ admin_rates_bp = Blueprint('admin_rates', __name__)
 
 
 @admin_rates_bp.route('/rates')
-def rates_list():
+@admin_required
+def rates_list(current_user):
     # Get rates grouped by transaction type and payment mode
     buy_rates = ExchangeRate.query.filter_by(
         transaction_type='BUY',
@@ -33,7 +36,8 @@ def rates_list():
 
 
 @admin_rates_bp.route('/rates/add', methods=['GET', 'POST'])
-def add_rate():
+@admin_required
+def add_rate(current_user,):
     if request.method == 'POST':
         try:
             # Check for overlapping slabs
@@ -73,7 +77,8 @@ def add_rate():
 
 
 @admin_rates_bp.route('/rates/<int:rate_id>/edit', methods=['GET', 'POST'])
-def edit_rate(rate_id):
+@admin_required
+def edit_rate(current_user, rate_id):
     rate = ExchangeRate.query.get_or_404(rate_id)
 
     if request.method == 'POST':
@@ -113,7 +118,8 @@ def edit_rate(rate_id):
 
 
 @admin_rates_bp.route('/rates/<int:rate_id>/toggle', methods=['POST'])
-def toggle_rate(rate_id):
+@admin_required
+def toggle_rate(current_user, rate_id):
     rate = ExchangeRate.query.get_or_404(rate_id)
 
     try:
