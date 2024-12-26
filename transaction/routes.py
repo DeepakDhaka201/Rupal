@@ -1140,9 +1140,9 @@ def get_transaction_details(current_user, transaction_id):
 
 
 class SortPattern(Enum):
-    AMOUNT_ASC = 1
-    AMOUNT_DESC = 2
-    RECOMMENDED = 3
+    AMOUNT_ASC = "Amount Asc"
+    AMOUNT_DESC = "Amount Desc"
+    RECOMMENDED = "Recommended"
 
 
 @transaction_bp.route('/claims', methods=['GET'])
@@ -1159,7 +1159,7 @@ def get_available_claims(current_user):
         if request.args.get('sort') == 'null':
             sort_pattern = SortPattern.RECOMMENDED.value
         else:
-            sort_pattern = int(request.args.get('sort', SortPattern.RECOMMENDED.value))
+            sort_pattern = request.args.get('sort', SortPattern.RECOMMENDED.value)
         bank_name = request.args.get('bank_name')
         if "All" == bank_name or "null" == bank_name:
             bank_name = None
