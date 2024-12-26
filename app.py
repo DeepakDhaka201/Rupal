@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-
 from admin.routes.claims import admin_claims_bp
 from admin.routes.rates import admin_rates_bp
 from admin.routes.referrals import referral_admin_bp
@@ -13,8 +12,67 @@ from models import db
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-# from apscheduler.schedulers.background import BackgroundScheduler
-# from scheduler.tasks import cleanup_expired_assignments, check_wallet_transactions
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from services.wallet_pool import cleanup_expired_claims, DepositMonitor
+
+
+def setup_logging(app):
+    """Configure application logging"""
+    if not app.debug and not app.testing:
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+
+        file_handler = RotatingFileHandler(
+            'logs/crypto_platform.log',
+            maxBytes=10240,
+            backupCount=10
+        )
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Crypto Platform startup')
+
+
+def setup_schedulers(app):
+    """Initialize and configure all schedulers"""
+    schedulers = []
+
+    # Wallet monitoring scheduler
+    wallet_scheduler = BackgroundScheduler()
+    monitor = DepositMonitor()
+    wallet_scheduler.add_job(
+        monitor.monitor_active_assignments,
+        'interval',
+        seconds=5,
+        max_instances=1
+    )
+
+    # Claims monitoring scheduler
+    claims_scheduler = BackgroundScheduler()
+    claims_scheduler.add_job(
+        cleanup_expired_claims,
+        'interval',
+        seconds=5,
+        max_instances=1
+    )
+
+    # Start schedulers
+    for scheduler in [wallet_scheduler, claims_scheduler]:
+        scheduler.start()
+        schedulers.append(scheduler)
+
+    # Register shutdown handlers
+    def cleanup_schedulers():
+        for scheduler in schedulers:
+            scheduler.shutdown()
+
+    atexit.register(cleanup_schedulers)
+    return schedulers
 
 
 def create_app(config_class=Config):
@@ -35,73 +93,65 @@ def create_app(config_class=Config):
 
     app.url_map.strict_slashes = False
 
-    app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
-    app.register_blueprint(dashboard_bp, url_prefix='/api/v1/dashboard')
-    app.register_blueprint(transaction_bp, url_prefix='/api/v1/transaction')
-    app.register_blueprint(bank_bp, url_prefix='/api/v1/bank')
-    app.register_blueprint(referral_bp, url_prefix='/api/v1/referral')
-    app.register_blueprint(user_bp, url_prefix='/api/v1/user')
+    # API routes
+    api_blueprints = [
+        (auth_bp, '/api/v1/auth'),
+        (dashboard_bp, '/api/v1/dashboard'),
+        (transaction_bp, '/api/v1/transaction'),
+        (bank_bp, '/api/v1/bank'),
+        (referral_bp, '/api/v1/referral'),
+        (user_bp, '/api/v1/user')
+    ]
 
-    app.register_blueprint(admin_users_bp, url_prefix='/admin_users')
-    app.register_blueprint(admin_transactions_bp, url_prefix='/admin_transactions')
-    app.register_blueprint(admin_claims_bp, url_prefix='/admin_claims')
-    app.register_blueprint(admin_rates_bp, url_prefix='/admin_rates')
-    app.register_blueprint(referral_admin_bp, url_prefix='/admin/referrals')
-    app.register_blueprint(wallet_bp, url_prefix='/admin/wallets')
+    # Admin routes
+    admin_blueprints = [
+        (admin_users_bp, '/admin_users'),
+        (admin_transactions_bp, '/admin_transactions'),
+        (admin_claims_bp, '/admin_claims'),
+        (admin_rates_bp, '/admin_rates'),
+        (referral_admin_bp, '/admin/referrals'),
+        (wallet_bp, '/admin/wallets')
+    ]
 
-    def format_datetime(value, format='%Y-%m-%d %H:%M'):
-        if value is None:
-            return ''
-        return value.strftime(format)
+    # Register all blueprints
+    for blueprint, url_prefix in api_blueprints + admin_blueprints:
+        app.register_blueprint(blueprint, url_prefix=url_prefix)
 
-    app.jinja_env.filters['datetime'] = format_datetime
+    # Setup Jinja filters
+    app.jinja_env.filters['datetime'] = lambda value, format='%Y-%m-%d %H:%M': \
+        value.strftime(format) if value else ''
 
-    # Set up logging
-    if not app.debug and not app.testing:
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        file_handler = RotatingFileHandler(
-            'logs/crypto_platform.log',
-            maxBytes=10240,
-            backupCount=10
-        )
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
+    # Setup logging
+    setup_logging(app)
 
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('Crypto Platform startup')
-
-    # Initialize scheduler
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(
-    #     func=cleanup_expired_assignments,
-    #     trigger="interval",
-    #     minutes=app.config['CLEANUP_INTERVAL']
-    # )
-    # scheduler.add_job(
-    #     func=check_wallet_transactions,
-    #     trigger="interval",
-    #     minutes=1
-    # )
-    # scheduler.start()
-
-    # Create database tables
+    # Initialize schedulers
     with app.app_context():
+        app.schedulers = setup_schedulers(app)
         db.create_all()
 
     @app.after_request
     def after_request(response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.update({
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,OPTIONS'
+        })
         return response
 
     return app
 
 
-if __name__ == '__main__':
+def main():
     app = create_app()
-    app.run(port=6010, debug=True)
+    port = int(os.environ.get('PORT', 6010))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+
+    if not debug:
+        from waitress import serve
+        serve(app, host='0.0.0.0', port=port)
+    else:
+        app.run(host='0.0.0.0', port=port, debug=True)
+
+
+if __name__ == '__main__':
+    main()
