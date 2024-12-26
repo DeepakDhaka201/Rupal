@@ -43,7 +43,7 @@ def setup_schedulers(app):
     schedulers = []
 
     # Wallet monitoring scheduler
-    wallet_scheduler = BackgroundScheduler()
+    wallet_scheduler = BackgroundScheduler(timezone='UTC')
     monitor = DepositMonitor()
     wallet_scheduler.add_job(
         monitor.monitor_active_assignments,
@@ -53,7 +53,7 @@ def setup_schedulers(app):
     )
 
     # Claims monitoring scheduler
-    claims_scheduler = BackgroundScheduler()
+    claims_scheduler = BackgroundScheduler(timezone='UTC')
     claims_scheduler.add_job(
         cleanup_expired_claims,
         'interval',
