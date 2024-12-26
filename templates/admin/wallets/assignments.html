@@ -1,6 +1,7 @@
 <!-- templates/admin/wallets/assignments.html -->
 {% extends "admin/base.html" %}
 
+{% from "admin/partials/pagination.html" import render_pagination %}  {# Import the macro #}
 {% block title %}Wallet Assignments{% endblock %}
 
 {% block content %}
@@ -52,7 +53,6 @@
             {% endfor %}
         </tbody>
     </table>
+    {{ render_pagination(assignments) }}
 </div>
-
-{{ render_pagination(assignments) }}
 {% endblock %}
