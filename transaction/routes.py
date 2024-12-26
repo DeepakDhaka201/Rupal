@@ -126,7 +126,7 @@ def get_dashboard(current_user):
             "new_version": "1.0.0",
             "current_version": "1.0.0",
             "apk_url": "https://samratmatka.com/static/apk/PayOn.apk",
-            "force_update": True
+            "force_update": False
         }), 200
 
     except Exception as e:
