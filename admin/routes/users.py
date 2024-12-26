@@ -55,7 +55,7 @@ def user_detail(current_user, user_id):
                                  .filter_by(user_id=user_id, transaction_type='SELL', status='COMPLETED').scalar() or 0
     }
 
-    return render_template('admin/users/detail.html',
+    return render_template('admin/users/details.html',
                            user=user,
                            transactions=transactions,
                            stats=stats
