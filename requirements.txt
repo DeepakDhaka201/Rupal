@@ -15,3 +15,4 @@ waitress==2.1.2
 pytz==2023.3
 cryptography==3.4.7
 qrcode
+PyMySQL==1.1.0
