@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, current_app, request
 
 from auth.utils import token_required
 
@@ -28,3 +28,25 @@ def get_profile(current_user):
     except Exception as e:
         current_app.logger.error(f"Get profile error: {str(e)}")
         return jsonify({'error': 'Failed to get profile'}), 500
+
+
+@user_bp.route('/config', methods=['POST'])
+def get_config():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Payload is required'}), 400
+
+        version = int(data.get('version', 0))
+
+        response = {
+            "new_version": "1.0.0",
+            "current_version": "1.0.0",
+            "apk_url": "https://samratmatka.com/static/apk/PayOn.apk",
+            "force_update": True,
+        }
+
+        return jsonify(response), 200
+    except Exception as e:
+        current_app.logger.error(f"Update profile error: {str(e)}")
+        return jsonify({'error': 'Failed to update profile'}), 500
