@@ -45,17 +45,26 @@ def setup_schedulers(app):
     # Wallet monitoring scheduler
     wallet_scheduler = BackgroundScheduler(timezone='UTC')
     monitor = DepositMonitor()
+
+    def monitor_with_context():
+        with app.app_context():
+            monitor.monitor_active_assignments()
+
     wallet_scheduler.add_job(
-        monitor.monitor_active_assignments,
+        monitor_with_context,
         'interval',
         seconds=5,
         max_instances=1
     )
 
     # Claims monitoring scheduler
+    def cleanup_with_context():
+        with app.app_context():
+            cleanup_expired_claims()
+
     claims_scheduler = BackgroundScheduler(timezone='UTC')
     claims_scheduler.add_job(
-        cleanup_expired_claims,
+        cleanup_with_context,
         'interval',
         seconds=5,
         max_instances=1
