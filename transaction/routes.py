@@ -21,6 +21,9 @@ def get_dashboard(current_user):
     """
     try:
         # 1. Get Active Buy Transactions
+        version = request.form.get("version")
+        print(version)
+
         transaction_records = Transaction.query.filter(
             Transaction.user_id == current_user.id,
             Transaction.transaction_type == TransactionType.BUY.name,
@@ -119,7 +122,11 @@ def get_dashboard(current_user):
                     'payment_modes': rates_response['payment_modes']['sell']
                 },
                 'updated_at': formatted_time
-            }
+            },
+            "new_version": "1.0.0",
+            "current_version": "1.0.0",
+            "apk_url": "https://samratmatka.com/static/apk/PayOn.apk",
+            "force_update": True
         }), 200
 
     except Exception as e:
