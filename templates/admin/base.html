@@ -19,7 +19,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="">Users</a>
+                        <a class="nav-link" href="{{ url_for('admin_users.users_list') }}">Users</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin_transactions.transactions_list') }}">Transactions</a>
