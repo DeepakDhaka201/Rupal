@@ -44,7 +44,7 @@ def login():
 
         db.session.commit()
 
-        return redirect(url_for('admin_users.users'))
+        return redirect(url_for('admin_users.users_list'))
 
     return render_template('auth/login.html')
 
