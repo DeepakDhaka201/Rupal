@@ -5,11 +5,18 @@ from datetime import timedelta
 class Config:
     # Basic Flask Config
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key')
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///crypto_platform.db')
+    # SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///crypto_platform.db')
+    # SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Config section
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:spaceback3423@localhost:3306/rupal'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_POOL_SIZE = 10
+    SQLALCHEMY_MAX_OVERFLOW = 20
+    SQLALCHEMY_POOL_TIMEOUT = 30
 
     # JWT Config
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-jwt-secret')
+    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'thisksjfbnwjhjfbjcbnhjdhjxdbnxbndnbehjdbnxcnb3bn3nb44322n')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 
     # OTP Config
