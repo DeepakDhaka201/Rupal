@@ -1,6 +1,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+
+from admin.routes.auth import admin_auth_bp
 from admin.routes.claims import admin_claims_bp
 from admin.routes.rates import admin_rates_bp
 from admin.routes.referrals import referral_admin_bp
@@ -114,6 +116,7 @@ def create_app(config_class=Config):
 
     # Admin routes
     admin_blueprints = [
+        (admin_auth_bp, '/admin_auth'),
         (admin_users_bp, '/admin_users'),
         (admin_transactions_bp, '/admin_transactions'),
         (admin_claims_bp, '/admin_claims'),

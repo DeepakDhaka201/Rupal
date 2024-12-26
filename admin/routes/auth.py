@@ -5,10 +5,10 @@ from auth.utils import generate_otp, send_sms_otp
 from models.models import db, User, OTP
 from datetime import datetime
 
-auth_bp = Blueprint('admin_auth', __name__)
+admin_auth_bp = Blueprint('admin_auth', __name__)
 
 
-@auth_bp.route('/login', methods=['GET', 'POST'])
+@admin_auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         mobile = request.form.get('mobile')
@@ -49,7 +49,7 @@ def login():
     return render_template('auth/login.html')
 
 
-@auth_bp.route('/send-otp', methods=['POST'])
+@admin_auth_bp.route('/send-otp', methods=['POST'])
 def send_otp():
     mobile = request.form.get('mobile')
     if not mobile:
@@ -77,7 +77,7 @@ def send_otp():
     return jsonify({'message': 'OTP sent successfully'})
 
 
-@auth_bp.route('/logout')
+@admin_auth_bp.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('admin_auth.login'))

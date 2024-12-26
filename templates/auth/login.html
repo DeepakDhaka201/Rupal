@@ -103,7 +103,7 @@
             }
 
             $.ajax({
-                url: '{{ url_for("auth.send_otp") }}',
+                url: '{{ url_for("admin_auth.send_otp") }}',
                 method: 'POST',
                 data: { mobile: mobile },
                 success: function(response) {
