@@ -21,7 +21,7 @@ def get_dashboard(current_user):
     """
     try:
         # 1. Get Active Buy Transactions
-        version = request.form.get("version")
+        version = request.args.get("version")
         print(version)
 
         transaction_records = Transaction.query.filter(
