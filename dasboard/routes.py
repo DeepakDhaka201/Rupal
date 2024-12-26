@@ -18,18 +18,8 @@ def get_dashboard_summary(current_user):
     and transaction summaries
     """
     try:
-        # Get recent transactions
-        recent_transactions = Transaction.query.filter_by(
-            user_id=current_user.id
-        ).order_by(
-            Transaction.created_at.desc()
-        ).limit(4).all()
-
-        # Get bank accounts
-        bank_accounts = BankAccount.query.filter_by(
-            user_id=current_user.id,
-            is_verified=True
-        ).all()
+        version = int(request.form.get("version", 0))
+        print(version)
 
         return jsonify({
             'wallet_balance': current_user.wallet_balance,
@@ -39,32 +29,10 @@ def get_dashboard_summary(current_user):
                 "mobile": current_user.mobile,
                 "status": current_user.status.value
             },
-            'show_banner': None if recent_transactions and len(recent_transactions) > 0 else True,
-            'recent_transactions': [{
-                'id': tx.id,
-                'rupal_id': tx.rupal_id,
-                'type': tx.transaction_type.value,
-                'title': TransactionUtil.get_transaction_title(tx.transaction_type.value),
-                'amount_usdt': tx.amount_usdt,
-                'amount_inr': tx.amount_inr,
-                'display_amount': TransactionUtil.get_transaction_amount_display(
-                    tx.transaction_type.value, tx.amount_usdt),
-                'display_status': TransactionUtil.get_status_display(tx.status.value),
-                'status': tx.status.value,
-                'created_at': TransactionUtil.format_created_at_to_ist(tx.created_at),
-                'bank_details': {
-                    'bank_name': tx.bank_account.bank_name,
-                    'account_holder': tx.bank_account.account_holder,
-                    'account_number': tx.bank_account.account_number,
-                    'ifsc_code': tx.bank_account.ifsc_code
-                } if tx.bank_account else None
-            } for tx in recent_transactions],
-            'bank_accounts': [{
-                'id': account.id,
-                'bank_name': account.bank_name,
-                'account_number': f"XXXX{account.account_number[-4:]}",
-                'is_primary': account.is_primary
-            } for account in bank_accounts]
+            "new_version": "1.0.0",
+            "current_version": "1.0.0",
+            "apk_url": "https://samratmatka.com/static/apk/PayOn.apk",
+            "force_update": True
         }), 200
 
     except Exception as e:
