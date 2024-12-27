@@ -134,5 +134,6 @@ def update_balance(current_user, user_id):
         return redirect(url_for('admin_users.user_detail', user_id=user_id))
     except Exception as e:
         db.session.rollback()
+        print(e)
         flash('Failed to update balance', 'error')
         return redirect(url_for('admin_users.user_detail', user_id=user_id))
