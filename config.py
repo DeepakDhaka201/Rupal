@@ -49,7 +49,7 @@ class Config:
 
     STATIC_FOLDER = 'static'
     QR_CODE_PATH = 'qrcodes'
-    UPLOAD_DIR = 'uploads'
+    UPLOAD_DIR = 'static/uploads'
     WITHDRAWAL_FEE = 5
 
     BANK_ACCOUNT_NAME = "Yadhah"
