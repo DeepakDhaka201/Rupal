@@ -71,7 +71,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for tx in transactions|selectattr('transaction_type', 'in', ['ADMIN_ADD', 'ADMIN_SUB'])|sort(attribute='created_at', reverse=true) %}
+                            {% for tx in transactions|selectattr('transaction_type', 'equalto', 'ADMIN_ADD')|selectattr('transaction_type', 'equalto', 'ADMIN_SUB')|sort(attribute='created_at', reverse=true) %}
                             <tr>
                                 <td>{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                 <td>
