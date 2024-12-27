@@ -26,7 +26,12 @@
                     </dd>
 
                     <dt class="col-sm-4">Balance</dt>
-                    <dd class="col-sm-8">{{ "%.2f"|format(user.wallet_balance) }} USDT</dd>
+                    <dd class="col-sm-8">
+                        {{ "%.2f"|format(user.wallet_balance) }} USDT
+                        <button class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#updateBalanceModal">
+                            Update
+                        </button>
+                    </dd>
 
                     <dt class="col-sm-4">Referral Code</dt>
                     <dd class="col-sm-8">{{ user.referral_code or 'N/A' }}</dd>
@@ -48,6 +53,38 @@
                         class="btn {% if user.status.value == 'ACTIVE' %}btn-danger{% else %}btn-success{% endif %}">
                     {{ 'Suspend User' if user.status.value == 'ACTIVE' else 'Activate User' }}
                 </button>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Balance Update History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in user.transactions|selectattr('transaction_type', 'equalto', 'ADMIN_ADJUSTMENT')|sort(attribute='created_at', reverse=true) %}
+                            <tr>
+                                <td>{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <span class="{% if tx.amount_usdt > 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {{ "%+.2f"|format(tx.amount_usdt) }} USDT
+                                    </span>
+                                </td>
+                                <td><small>{{ tx.admin_notes }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -118,6 +155,44 @@
         </div>
     </div>
 </div>
+
+<!-- Balance Update Modal -->
+<div class="modal fade" id="updateBalanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin.user.update_balance', user_id=user.id) }}" id="balanceUpdateForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Wallet Balance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Operation</label>
+                        <select name="operation" class="form-select" required>
+                            <option value="add">Add Balance</option>
+                            <option value="subtract">Subtract Balance</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount (USDT)</label>
+                        <input type="number" name="amount" class="form-control" required
+                               min="0.01" step="0.01" data-current-balance="{{ user.wallet_balance }}">
+                        <div class="form-text">Current balance: {{ "%.2f"|format(user.wallet_balance) }} USDT</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <textarea name="reason" class="form-control" required rows="3"
+                                  placeholder="Provide a reason for this balance update"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Balance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -139,5 +214,28 @@ function toggleUserStatus(userId, currentStatus) {
             alert('An error occurred while updating user status');
         });
 }
+
+// Balance update form handling
+document.addEventListener('DOMContentLoaded', function() {
+    const balanceForm = document.getElementById('balanceUpdateForm');
+    const amountInput = balanceForm.querySelector('input[name="amount"]');
+    const operationSelect = balanceForm.querySelector('select[name="operation"]');
+    const currentBalance = parseFloat(amountInput.dataset.currentBalance);
+
+    balanceForm.addEventListener('submit', function(e) {
+        const amount = parseFloat(amountInput.value);
+        const operation = operationSelect.value;
+
+        if (operation === 'subtract' && amount > currentBalance) {
+            e.preventDefault();
+            alert('Cannot subtract more than current balance');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to update this user\'s balance?')) {
+            e.preventDefault();
+        }
+    });
+});
 </script>
 {% endblock %}

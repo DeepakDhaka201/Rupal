@@ -70,6 +70,7 @@ class TransactionType(Enum):
     WITHDRAW = 'WITHDRAW'
     BUY = 'BUY'
     SELL = 'SELL'
+    ADMIN_ADJUSTMENT = 'ADMIN_ADJUSTMENT'
 
 
 class TransactionStatus(Enum):

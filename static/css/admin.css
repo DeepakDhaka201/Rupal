@@ -13,6 +13,22 @@
 .status-suspended { background-color: #f8d7da; color: #721c24; }
 .status-pending { background-color: #fff3cd; color: #856404; }
 
+.status-active { background-color: #28a745; }
+.status-suspended { background-color: #dc3545; }
+.status-pending { background-color: #ffc107; }
+
+.status-completed { background-color: #28a745; }
+.status-pending { background-color: #ffc107; }
+.status-processing { background-color: #17a2b8; }
+.status-failed { background-color: #dc3545; }
+.status-cancelled { background-color: #6c757d; }
+
+/* Balance update history table */
+.table-sm td {
+    vertical-align: middle;
+}
+
+
 .table-responsive {
     margin-bottom: 1rem;
 }

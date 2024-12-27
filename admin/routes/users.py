@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 
 from auth.utils import admin_required
-from models.models import db, User, UserStatus, Transaction
+from models.models import db, User, UserStatus, Transaction, TransactionType, TransactionStatus
 from sqlalchemy import desc
 from datetime import datetime
 
@@ -80,3 +80,56 @@ def toggle_user_status(current_user, user_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({'success': True, 'message': message})
     return redirect(url_for('admin_users.users_list'))
+
+
+# admin/user_routes.py
+@admin_users_bp.route('/<int:user_id>/balance', methods=['POST'])
+@admin_required
+def update_balance(current_user, user_id):
+    try:
+        user = User.query.get_or_404(user_id)
+        operation = request.form.get('operation')  # 'add' or 'subtract'
+        amount = float(request.form.get('amount', 0))
+        reason = request.form.get('reason')
+
+        if not amount or amount <= 0:
+            flash('Invalid amount', 'error')
+            return redirect(url_for('admin_users.user_detail', user_id=user_id))
+
+        if operation == 'add':
+            user.wallet_balance += amount
+            action = 'added to'
+        elif operation == 'subtract':
+            if user.wallet_balance < amount:
+                flash('Insufficient balance', 'error')
+                return redirect(url_for('admin_users.user_detail', user_id=user_id))
+            user.wallet_balance -= amount
+            action = 'subtracted from'
+        else:
+            flash('Invalid operation', 'error')
+            return redirect(url_for('admin_users.user_detail', user_id=user_id))
+
+        # Log the balance update
+        admin_note = f"Balance {action} by admin. Reason: {reason}"
+        transaction = Transaction(
+            user_id=user.id,
+            transaction_type=TransactionType.ADMIN_ADJUSTMENT,
+            amount_usdt=amount,
+            status=TransactionStatus.COMPLETED,
+            admin_notes=admin_note,
+            completed_at=datetime.utcnow()
+        )
+
+        db.session.add(transaction)
+        db.session.commit()
+
+        flash(f'{amount} USDT {action} wallet balance successfully', 'success')
+        return redirect(url_for('admin_users.user_detail', user_id=user_id))
+
+    except ValueError:
+        flash('Invalid amount format', 'error')
+        return redirect(url_for('admin_users.user_detail', user_id=user_id))
+    except Exception as e:
+        db.session.rollback()
+        flash('Failed to update balance', 'error')
+        return redirect(url_for('admin_users.user_detail', user_id=user_id))
