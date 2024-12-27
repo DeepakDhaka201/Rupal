@@ -6,6 +6,8 @@ from models.models import db, User, UserStatus, Transaction, TransactionType, Tr
 from sqlalchemy import desc
 from datetime import datetime
 
+from transaction.utils import TransactionUtil
+
 admin_users_bp = Blueprint('admin_users', __name__)
 
 
@@ -113,6 +115,7 @@ def update_balance(current_user, user_id):
         admin_note = f"Balance {action} by admin. Reason: {reason}"
         transaction = Transaction(
             user_id=user.id,
+            rupal_id=TransactionUtil.generate_transaction_ref(),
             transaction_type=TransactionType.ADMIN_ADJUSTMENT,
             amount_usdt=amount,
             status=TransactionStatus.COMPLETED,
