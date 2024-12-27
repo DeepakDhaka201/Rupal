@@ -21,8 +21,10 @@ def get_dashboard(current_user):
     """
     try:
         # 1. Get Active Buy Transactions
-        version = request.args.get("version")
+        version = int(request.args.get("version"))
         print(version)
+
+        current_version = 2
 
         transaction_records = Transaction.query.filter(
             Transaction.user_id == current_user.id,
@@ -123,10 +125,11 @@ def get_dashboard(current_user):
                 },
                 'updated_at': formatted_time
             },
-            "new_version": "1.0.0",
+            "new_version": "1.0.1",
             "current_version": "1.0.0",
             "apk_url": "https://samratmatka.com/static/apk/PayOn.apk",
-            "force_update": False
+            "web_url": "https://samratmatka.com/static/apk/PayOn.apk",
+            "force_update": True if version < current_version else False
         }), 200
 
     except Exception as e:
@@ -751,6 +754,7 @@ def initiate_sell(current_user):
         # Create transaction and deduct balance
         transaction = Transaction(
             user_id=current_user.id,
+            rupal_id=TransactionUtil.generate_transaction_ref(),
             transaction_type=TransactionType.SELL,
             payment_mode=payment_mode,
             amount_usdt=amount_usdt,
