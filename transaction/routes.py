@@ -24,7 +24,7 @@ def get_dashboard(current_user):
         version = int(request.args.get("version"))
         print(version)
 
-        current_version = 2
+        current_version = 3
 
         transaction_records = Transaction.query.filter(
             Transaction.user_id == current_user.id,
