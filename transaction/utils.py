@@ -28,14 +28,18 @@ class TransactionUtil:
             'DEPOSIT': 'USDT Received',
             'WITHDRAW': 'USDT Sent',
             'BUY': 'USDT Purchased',
-            'SELL': 'USDT Sold'
+            'SELL': 'USDT Sold',
+            'ADMIN_ADD': 'USDT Added',
+            'ADMIN_SUB': 'USDT Deducted'
         }
 
         colors = {
             'DEPOSIT': '#2ECC71',
             'WITHDRAW': '#E74C3C',
             'BUY': '#2ECC71',
-            'SELL': '#E74C3C'
+            'SELL': '#E74C3C',
+            'ADMIN_ADD': '#2ECC71',
+            'ADMIN_SUB': '#E74C3C'
         }
 
         return {
@@ -224,9 +228,9 @@ class TransactionUtil:
             formatted_amount = "{:.2f}".format(float(amount))
 
             # Determine if amount should be positive or negative
-            if transaction_type in ['BUY', 'DEPOSIT']:
+            if transaction_type in ['BUY', 'DEPOSIT', 'ADMIN_ADD']:
                 return f"+₮{formatted_amount}"
-            elif transaction_type in ['SELL', 'WITHDRAW']:
+            elif transaction_type in ['SELL', 'WITHDRAW', 'ADMIN_SUB']:
                 return f"-₮{formatted_amount}"
             else:
                 return f"₮{formatted_amount}"

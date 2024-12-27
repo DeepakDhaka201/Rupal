@@ -70,7 +70,8 @@ class TransactionType(Enum):
     WITHDRAW = 'WITHDRAW'
     BUY = 'BUY'
     SELL = 'SELL'
-    ADMIN_TX = 'ADMIN_TX'
+    ADMIN_ADD = 'ADMIN_ADD'
+    ADMIN_SUB = 'ADMIN_SUB'
 
 
 class TransactionStatus(Enum):

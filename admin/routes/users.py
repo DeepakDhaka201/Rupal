@@ -93,6 +93,7 @@ def update_balance(current_user, user_id):
         operation = request.form.get('operation')  # 'add' or 'subtract'
         amount = float(request.form.get('amount', 0))
         reason = request.form.get('reason')
+        transaction_type = None
 
         if not amount or amount <= 0:
             flash('Invalid amount', 'error')
@@ -101,12 +102,14 @@ def update_balance(current_user, user_id):
         if operation == 'add':
             user.wallet_balance += amount
             action = 'added to'
+            transaction_type = TransactionType.ADMIN_ADD
         elif operation == 'subtract':
             if user.wallet_balance < amount:
                 flash('Insufficient balance', 'error')
                 return redirect(url_for('admin_users.user_detail', user_id=user_id))
             user.wallet_balance -= amount
             action = 'subtracted from'
+            transaction_type = TransactionType.ADMIN_SUB
         else:
             flash('Invalid operation', 'error')
             return redirect(url_for('admin_users.user_detail', user_id=user_id))
@@ -116,7 +119,7 @@ def update_balance(current_user, user_id):
         transaction = Transaction(
             user_id=user.id,
             rupal_id=TransactionUtil.generate_transaction_ref(),
-            transaction_type=TransactionType.ADMIN_TX,
+            transaction_type=transaction_type,
             amount_usdt=amount,
             status=TransactionStatus.COMPLETED,
             admin_notes=admin_note,
