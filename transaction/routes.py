@@ -854,7 +854,7 @@ def initiate_deposit(current_user):
             'address': wallet.address,
             'qr_url': TransactionUtil.generate_address_qr(assignment.wallet.address),
             'expires_at': int(expires_at.timestamp() * 1000),
-            'expire_after': int(timedelta(minutes=20).total_seconds() * 1000)
+            'expire_after': (expires_at - datetime.utcnow()).total_seconds() * 1000
         }), 200
     except Exception as e:
         current_app.logger.error(f"Deposit initiation error: {str(e)}")
