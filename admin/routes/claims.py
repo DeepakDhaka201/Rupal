@@ -40,6 +40,7 @@ def claims_list(current_user):
 
 
 @admin_claims_bp.route('/claims/add', methods=['GET', 'POST'])
+@admin_required
 def add_claim(current_user):
     if request.method == 'POST':
         try:
@@ -66,6 +67,7 @@ def add_claim(current_user):
 
 
 @admin_claims_bp.route('/claims/<int:claim_id>/edit', methods=['GET', 'POST'])
+@admin_required
 def edit_claim(current_user, claim_id):
     claim = Claim.query.get_or_404(claim_id)
 
@@ -92,6 +94,7 @@ def edit_claim(current_user, claim_id):
 
 
 @admin_claims_bp.route('/claims/<int:claim_id>/update-status', methods=['POST'])
+@admin_required
 def update_claim_status(current_user, claim_id):
     claim = Claim.query.get_or_404(claim_id)
     new_status = request.form.get('is_active', '').lower() == 'true'
@@ -112,6 +115,7 @@ def update_claim_status(current_user, claim_id):
 
 
 @admin_claims_bp.route('/claims/<int:claim_id>/details')
+@admin_required
 def claim_details(current_user, claim_id):
     claim = Claim.query.get_or_404(claim_id)
 
