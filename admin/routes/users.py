@@ -116,7 +116,7 @@ def update_balance(current_user, user_id):
         transaction = Transaction(
             user_id=user.id,
             rupal_id=TransactionUtil.generate_transaction_ref(),
-            transaction_type=TransactionType.ADMIN,
+            transaction_type=TransactionType.ADMIN_TX,
             amount_usdt=amount,
             status=TransactionStatus.COMPLETED,
             admin_notes=admin_note,
