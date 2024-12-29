@@ -71,7 +71,7 @@ def add_commission(current_user):
             buy_commission_percent=buy_commission,
             sell_commission_percent=sell_commission,
             min_amount_usdt=min_amount,
-            created_by=343
+            created_by=current_user.id
         )
 
         db.session.add(commission)
