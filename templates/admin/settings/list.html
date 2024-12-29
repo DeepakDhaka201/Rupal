@@ -1,0 +1,60 @@
+<!-- templates/admin/settings/list.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Settings Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Settings Management</h1>
+    <a href="{{ url_for('admin.settings.add_setting') }}" class="btn btn-primary">Add New Setting</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Public</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for setting in settings %}
+            <tr>
+                <td>{{ setting.key }}</td>
+                <td>
+                    {% if setting.type == 'json' %}
+                    <pre class="mb-0"><code>{{ setting.value|prettyjson }}</code></pre>
+                    {% else %}
+                    {{ setting.value }}
+                    {% endif %}
+                </td>
+                <td>{{ setting.type }}</td>
+                <td>{{ setting.description }}</td>
+                <td>
+                    <span class="badge {% if setting.is_public %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ 'Public' if setting.is_public else 'Private' }}
+                    </span>
+                </td>
+                <td>{{ setting.updated_at|datetime }}</td>
+                <td>
+                    <div class="btn-group">
+                        <a href="{{ url_for('admin.settings.edit_setting', setting_id=setting.id) }}"
+                           class="btn btn-sm btn-primary">Edit</a>
+                        <form action="{{ url_for('admin.settings.delete_setting', setting_id=setting.id) }}"
+                              method="POST" class="d-inline"
+                              onsubmit="return confirm('Are you sure you want to delete this setting?')">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

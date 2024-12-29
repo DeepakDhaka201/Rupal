@@ -7,7 +7,7 @@ from sqlalchemy import func, cast, Float
 
 from auth.utils import token_required
 from models.models import db, Transaction, TransactionStatus, TransactionType, BankAccount, WalletAssignment, \
-    PooledWallet, ExchangeRate, PaymentMode, Claim
+    PooledWallet, ExchangeRate, PaymentMode, Claim, Setting
 from transaction.utils import TransactionUtil
 
 transaction_bp = Blueprint('transaction', __name__)
@@ -24,7 +24,7 @@ def get_dashboard(current_user):
         version = int(request.args.get("version"))
         print(version)
 
-        current_version = 5
+        current_version = Setting.get_value('apk.version_number', 5)
 
         transaction_records = Transaction.query.filter(
             Transaction.user_id == current_user.id,
@@ -126,10 +126,12 @@ def get_dashboard(current_user):
                 },
                 'updated_at': formatted_time
             },
-            "new_version": "1.0.1",
+            "new_version": Setting.get_value('apk.latest_version'),
             "current_version": "1.0.0",
-            "apk_url": "https://samratmatka.com/static/apk/PayOn.apk",
-            "web_url": "https://samratmatka.com/static/apk/PayOn.apk",
+            "telegram_id": Setting.get_value('support.telegram', "https://t.me/PayOnSupport1"),
+            "w_fee": Setting.get_value("withdrawal.fee", 3.00),
+            "apk_url": Setting.get_value('apk.url'),
+            "web_url": Setting.get_value('apk.web_url'),
             "force_update": True if version < current_version else False
         }), 200
 

@@ -1,0 +1,52 @@
+
+<!-- templates/admin/settings/add.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Add Setting{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Add New Setting</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="key" class="form-label">Key</label>
+                <input type="text" class="form-control" id="key" name="key" required
+                       pattern="[a-zA-Z0-9_.]+"
+                       title="Only letters, numbers, dots, and underscores allowed">
+            </div>
+
+            <div class="mb-3">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type" required>
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="boolean">Boolean</option>
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="value" class="form-label">Value</label>
+                <textarea class="form-control" id="value" name="value" rows="3" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="is_public" name="is_public">
+                <label class="form-check-label" for="is_public">Make Public</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add Setting</button>
+            <a href="{{ url_for('admin.settings.list_settings') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

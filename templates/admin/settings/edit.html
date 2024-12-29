@@ -1,0 +1,45 @@
+<!-- templates/admin/settings/edit.html -->
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Setting{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Edit Setting: {{ setting.key }}</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Key</label>
+                <input type="text" class="form-control" value="{{ setting.key }}" disabled>
+                <div class="form-text">Key cannot be changed</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Type</label>
+                <input type="text" class="form-control" value="{{ setting.type }}" disabled>
+            </div>
+
+            <div class="mb-3">
+                <label for="value" class="form-label">Value</label>
+                <textarea class="form-control" id="value" name="value" rows="3" required>{{ setting.value }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="2">{{ setting.description }}</textarea>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="is_public" name="is_public"
+                       {% if setting.is_public %}checked{% endif %}>
+                <label class="form-check-label" for="is_public">Make Public</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Setting</button>
+            <a href="{{ url_for('admin.settings.list_settings') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
