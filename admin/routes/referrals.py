@@ -64,7 +64,7 @@ def add_commission(current_user):
         existing = ReferralCommission.query.filter_by(level=level).first()
         if existing:
             flash('Commission level already exists', 'error')
-            return redirect(url_for('admin.referral.commission_rates'))
+            return redirect(url_for('admin_referral.commission_rates'))
 
         commission = ReferralCommission(
             level=level,
@@ -78,11 +78,11 @@ def add_commission(current_user):
         db.session.commit()
 
         flash('Commission rate added successfully', 'success')
-        return redirect(url_for('admin.referral.commission_rates'))
+        return redirect(url_for('admin_referral.commission_rates'))
 
     except ValueError:
         flash('Invalid values provided', 'error')
-        return redirect(url_for('admin.referral.commission_rates'))
+        return redirect(url_for('admin_referral.commission_rates'))
 
 
 @referral_admin_bp.route('/commissions/<int:commission_id>/edit', methods=['POST'])

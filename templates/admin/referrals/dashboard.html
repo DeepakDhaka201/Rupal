@@ -73,7 +73,7 @@
                             {% for user, count, earnings in top_referrers %}
                             <tr>
                                 <td>
-                                    <a href="{{ url_for('admin.referral.referral_tree', user_id=user.id) }}">
+                                    <a href="{{ url_for('admin_referral.referral_tree', user_id=user.id) }}">
                                         {{ user.mobile }}
                                     </a>
                                 </td>

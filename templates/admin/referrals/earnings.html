@@ -58,7 +58,7 @@
             {% for earning in earnings.items %}
             <tr>
                 <td>
-                    <a href="{{ url_for('admin.referral.referral_tree', user_id=earning.user_id) }}">
+                    <a href="{{ url_for('admin_referral.referral_tree', user_id=earning.user_id) }}">
                         {{ earning.user.mobile }}
                     </a>
                 </td>

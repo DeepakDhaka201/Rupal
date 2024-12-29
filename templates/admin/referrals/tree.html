@@ -35,7 +35,7 @@
                         </td>
                         <td>{{ "%.2f"|format(earnings_map.get(referral.id, 0)) }} USDT</td>
                         <td>
-                            <a href="{{ url_for('admin.referral.referral_tree', user_id=referral.id) }}"
+                            <a href="{{ url_for('admin_referral.referral_tree', user_id=referral.id) }}"
                                class="btn btn-sm btn-secondary">View Tree</a>
                         </td>
                     </tr>
