@@ -24,8 +24,7 @@ def get_dashboard(current_user):
         version = int(request.args.get("version"))
         print(version)
 
-
-        current_version = 4
+        current_version = 5
 
         transaction_records = Transaction.query.filter(
             Transaction.user_id == current_user.id,
@@ -505,26 +504,26 @@ def initiate_buy2(current_user):
             db.session.commit()
 
         return jsonify({
-                'transaction': {
-                    'id': transaction.id,
-                    'rupal_id': transaction.rupal_id,
-                    'amount_inr': amount_inr,
-                    'amount_usdt': round(amount_usdt, 2),
-                    'payment_mode': payment_mode_val,
-                    'rate': rate.rate,
-                    'payment_reference': transaction.payment_reference,
-                    'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
-                    'claim': {
-                        'id': claim.id,
-                        'status': claim.status,
-                        'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds()) * 1000,
-                        'account_name': claim.account_holder,
-                        'account_number': claim.account_number,
-                        'ifsc_code': claim.ifsc_code,
-                        'bank_name': claim.bank_name
-                    }
+            'transaction': {
+                'id': transaction.id,
+                'rupal_id': transaction.rupal_id,
+                'amount_inr': amount_inr,
+                'amount_usdt': round(amount_usdt, 2),
+                'payment_mode': payment_mode_val,
+                'rate': rate.rate,
+                'payment_reference': transaction.payment_reference,
+                'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
+                'claim': {
+                    'id': claim.id,
+                    'status': claim.status,
+                    'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds()) * 1000,
+                    'account_name': claim.account_holder,
+                    'account_number': claim.account_number,
+                    'ifsc_code': claim.ifsc_code,
+                    'bank_name': claim.bank_name
                 }
-            }), 200
+            }
+        }), 200
 
     except Exception as e:
         traceback.print_exc()
@@ -564,7 +563,8 @@ def active_buy_transactions(current_user):
                     'bank_name': claim.bank_name
                 }
             })
-        return jsonify({"transactions": transactions, "showActive": True if len(transactions) > 0 else None, "wallet_usdt": current_user.wallet_balance}), 200
+        return jsonify({"transactions": transactions, "showActive": True if len(transactions) > 0 else None,
+                        "wallet_usdt": current_user.wallet_balance}), 200
     except Exception as e:
         print(traceback.format_exc())
         current_app.logger.error(f"Get buy active orders error: {str(e)}")
@@ -1110,27 +1110,28 @@ def get_transaction_details(current_user, transaction_id):
         ).first_or_404()
 
         transaction_details = {
-                'id': transaction.id,
-                'rupal_id': transaction.rupal_id,
-                'type': transaction.transaction_type.value,
-                'amount_usdt': transaction.amount_usdt,
-                'amount_inr': transaction.amount_inr,
-                'status': transaction.status.value,
-                'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
-                'completed_at': TransactionUtil.format_created_at_to_ist(transaction.completed_at) if transaction.completed_at else None,
-                'blockchain_txn_id': transaction.blockchain_txn_id,
-                'exchange_rate': transaction.exchange_rate,
-                'fee_usdt': transaction.fee_usdt,
-                'bank_details': {
-                    'account_holder'
-                    'account_number': transaction.bank_account.account_number,
-                    'ifsc_code': transaction.bank_account.ifsc_code,
-                    'bank_name': transaction.bank_account.bank_name
-                } if transaction.bank_account else None,
-                'addresses': {
-                    'from': transaction.from_address,
-                    'to': transaction.to_address
-                } if (transaction.from_address or transaction.to_address) else None
+            'id': transaction.id,
+            'rupal_id': transaction.rupal_id,
+            'type': transaction.transaction_type.value,
+            'amount_usdt': transaction.amount_usdt,
+            'amount_inr': transaction.amount_inr,
+            'status': transaction.status.value,
+            'created_at': TransactionUtil.format_created_at_to_ist(transaction.created_at),
+            'completed_at': TransactionUtil.format_created_at_to_ist(
+                transaction.completed_at) if transaction.completed_at else None,
+            'blockchain_txn_id': transaction.blockchain_txn_id,
+            'exchange_rate': transaction.exchange_rate,
+            'fee_usdt': transaction.fee_usdt,
+            'bank_details': {
+                'account_holder'
+                'account_number': transaction.bank_account.account_number,
+                'ifsc_code': transaction.bank_account.ifsc_code,
+                'bank_name': transaction.bank_account.bank_name
+            } if transaction.bank_account else None,
+            'addresses': {
+                'from': transaction.from_address,
+                'to': transaction.to_address
+            } if (transaction.from_address or transaction.to_address) else None
         }
 
         claim = transaction.claim
@@ -1271,7 +1272,8 @@ def get_claims(current_user):
                     'claim': {
                         'id': claim.id,
                         'status': claim.status,
-                        'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds() * 1000) if claim.expires_at else None,
+                        'expire_after': int((
+                                                        claim.expires_at - datetime.utcnow()).total_seconds() * 1000) if claim.expires_at else None,
                         'expires_at': claim.expires_at,
                         'account_name': claim.account_holder,
                         'account_number': claim.account_number,
