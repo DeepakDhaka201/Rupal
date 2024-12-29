@@ -6,6 +6,7 @@ from admin.routes.auth import admin_auth_bp
 from admin.routes.claims import admin_claims_bp
 from admin.routes.rates import admin_rates_bp
 from admin.routes.referrals import referral_admin_bp
+from admin.routes.settings import settings_bp
 from admin.routes.transactions import admin_transactions_bp
 from admin.routes.users import admin_users_bp
 from admin.routes.wallet_routes import wallet_bp
@@ -122,7 +123,8 @@ def create_app(config_class=Config):
         (admin_claims_bp, '/admin_claims'),
         (admin_rates_bp, '/admin_rates'),
         (referral_admin_bp, '/admin/referrals'),
-        (wallet_bp, '/admin/wallets')
+        (wallet_bp, '/admin/wallets'),
+        (settings_bp, '/admin/settings')
     ]
 
     # Register all blueprints

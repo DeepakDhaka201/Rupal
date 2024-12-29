@@ -60,7 +60,7 @@ def add_setting(current_user):
         db.session.commit()
 
         flash('Setting added successfully', 'success')
-        return redirect(url_for('admin.settings.list_settings'))
+        return redirect(url_for('settings.list_settings'))
 
     return render_template('admin/settings/add.html')
 
@@ -98,7 +98,7 @@ def edit_setting(cuser, setting_id):
         db.session.commit()
 
         flash('Setting updated successfully', 'success')
-        return redirect(url_for('admin.settings.list_settings'))
+        return redirect(url_for('settings.list_settings'))
 
     return render_template('admin/settings/edit.html', setting=setting)
 
@@ -111,4 +111,4 @@ def delete_setting(setting_id):
     db.session.commit()
 
     flash('Setting deleted successfully', 'success')
-    return redirect(url_for('admin.settings.list_settings'))
+    return redirect(url_for('settings.list_settings'))
