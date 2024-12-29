@@ -15,6 +15,7 @@ class DepositMonitor:
     def monitor_active_assignments(self):
         try:
             current_app.logger.info(f"Checking wallets")
+            print("Checking wallets")
             # Get both active and expired assignments
             assignments = (WalletAssignment.query
                            .filter(
@@ -31,6 +32,7 @@ class DepositMonitor:
                     self._handle_expired_assignment(assignment)
 
         except Exception as e:
+            print(e)
             current_app.logger.error(f"Monitor error: {str(e)}")
 
     def _check_assignment(self, assignment):
@@ -170,6 +172,7 @@ def cleanup_expired_claims():
     try:
         with db.session.begin_nested():
             current_app.logger.info(f"Checking claims")
+            print("Checking Claims")
             # Find and lock expired claims
             expired_claims = (Claim.query
                               .filter(
@@ -196,6 +199,7 @@ def cleanup_expired_claims():
 
     except Exception as e:
         db.session.rollback()
+        print(e)
         current_app.logger.error(f"Claim cleanup error: {str(e)}")
 
 
