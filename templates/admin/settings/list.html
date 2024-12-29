@@ -6,7 +6,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Settings Management</h1>
-    <a href="{{ url_for('admin.settings.add_setting') }}" class="btn btn-primary">Add New Setting</a>
+    <a href="{{ url_for('settings.add_setting') }}" class="btn btn-primary">Add New Setting</a>
 </div>
 
 <div class="table-responsive">
@@ -43,9 +43,9 @@
                 <td>{{ setting.updated_at|datetime }}</td>
                 <td>
                     <div class="btn-group">
-                        <a href="{{ url_for('admin.settings.edit_setting', setting_id=setting.id) }}"
+                        <a href="{{ url_for('settings.edit_setting', setting_id=setting.id) }}"
                            class="btn btn-sm btn-primary">Edit</a>
-                        <form action="{{ url_for('admin.settings.delete_setting', setting_id=setting.id) }}"
+                        <form action="{{ url_for('settings.delete_setting', setting_id=setting.id) }}"
                               method="POST" class="d-inline"
                               onsubmit="return confirm('Are you sure you want to delete this setting?')">
                             <button type="submit" class="btn btn-sm btn-danger">Delete</button>

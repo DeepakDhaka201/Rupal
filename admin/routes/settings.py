@@ -28,12 +28,12 @@ def add_setting(current_user):
 
         if not key or not value:
             flash('Key and value are required', 'error')
-            return redirect(url_for('admin.settings.add_setting'))
+            return redirect(url_for('settings.add_setting'))
 
         # Check if key already exists
         if Setting.query.filter_by(key=key).first():
             flash('Setting key already exists', 'error')
-            return redirect(url_for('admin.settings.add_setting'))
+            return redirect(url_for('settings.add_setting'))
 
         # Validate value based on type
         try:
@@ -45,7 +45,7 @@ def add_setting(current_user):
                 value = str(value.lower() == 'true').lower()
         except:
             flash('Invalid value for selected type', 'error')
-            return redirect(url_for('admin.settings.add_setting'))
+            return redirect(url_for('settings.add_setting'))
 
         setting = Setting(
             key=key,
@@ -67,7 +67,7 @@ def add_setting(current_user):
 
 @settings_bp.route('/<int:setting_id>/edit', methods=['GET', 'POST'])
 @admin_required
-def edit_setting(cuser, setting_id):
+def edit_setting(current_user, setting_id):
     setting = Setting.query.get_or_404(setting_id)
 
     if request.method == 'POST':
@@ -77,7 +77,7 @@ def edit_setting(cuser, setting_id):
 
         if not value:
             flash('Value is required', 'error')
-            return redirect(url_for('admin.settings.edit_setting', setting_id=setting_id))
+            return redirect(url_for('settings.edit_setting', setting_id=setting_id))
 
         # Validate value based on type
         try:
@@ -89,7 +89,7 @@ def edit_setting(cuser, setting_id):
                 value = str(value.lower() == 'true').lower()
         except:
             flash('Invalid value for setting type', 'error')
-            return redirect(url_for('admin.settings.edit_setting', setting_id=setting_id))
+            return redirect(url_for('settings.edit_setting', setting_id=setting_id))
 
         setting.value = value
         setting.description = description

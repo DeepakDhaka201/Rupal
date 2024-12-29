@@ -34,8 +34,20 @@
                         <a class="nav-link" href="{{ url_for('wallet.list_wallets') }}">Wallets</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin_referral.dashboard') }}">Referrals</a>
+                        <a class="nav-link" href="{{ url_for('admin_referral.dashboard') }}">Referrals Summary</a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_referral.commission_rates') }}">Referral Commission</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_referral.referral_tree') }}">Referral Tree</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_referral.earnings') }}">Referral Earnings</a>
+                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('settings.list_settings') }}">Settings</a>
                     </li>
