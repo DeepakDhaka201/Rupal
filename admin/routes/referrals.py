@@ -48,7 +48,7 @@ def dashboard(current_user):
 @admin_required
 def commission_rates(current_user):
     rates = ReferralCommission.query.order_by(ReferralCommission.level).all()
-    return render_template('admin/referrals/commission_rates.html', rates=rates)
+    return render_template('admin/referrals/comission_rates.html', rates=rates)
 
 
 @referral_admin_bp.route('/commissions/add', methods=['POST'])
