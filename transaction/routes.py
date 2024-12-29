@@ -24,7 +24,7 @@ def get_dashboard(current_user):
         version = int(request.args.get("version"))
         print(version)
 
-        current_version = Setting.get_value('apk.version_number', 5)
+        current_version = int(Setting.get_value('apk.version_number', 5))
 
         transaction_records = Transaction.query.filter(
             Transaction.user_id == current_user.id,
