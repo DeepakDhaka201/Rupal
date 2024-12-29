@@ -335,7 +335,19 @@ class TransactionUtil:
         """
         try:
             # Generate unique filename
-            filename = f"qr_{uuid.uuid4().hex}.png"
+            filename = f"qr_{address}.png"
+
+            # Create uploads directory if it doesn't exist
+            upload_dir = os.path.join(current_app.static_folder, 'qrcodes')
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+
+            domain = "https://payon.website/"
+            file_path = os.path.join(upload_dir, filename)
+
+            if os.path.exists(file_path):
+                qr_url = domain + url_for('static', filename=f'qrcodes/{filename}')
+                return qr_url
 
             # Create QR code instance
             qr = qrcode.QRCode(
@@ -356,17 +368,11 @@ class TransactionUtil:
             # Resize if needed
             qr_image = qr_image.resize((size, size))
 
-            # Create uploads directory if it doesn't exist
-            upload_dir = os.path.join(current_app.static_folder, 'qrcodes')
-            if not os.path.exists(upload_dir):
-                os.makedirs(upload_dir)
-
             # Save image
-            file_path = os.path.join(upload_dir, filename)
             qr_image.save(file_path)
 
             # Generate URL
-            qr_url = url_for('static', filename=f'qrcodes/{filename}')
+            qr_url = domain + url_for('static', filename=f'qrcodes/{filename}')
 
             return qr_url
 

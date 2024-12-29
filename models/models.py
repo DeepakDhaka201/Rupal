@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from enum import Enum
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -240,3 +241,46 @@ class Claim(db.Model):
         db.Index('idx_claim_status', 'status', 'claimed_by'),
         db.Index('idx_active_claims', 'claimed_by', 'status', 'expires_at')
     )
+
+
+# models/settings.py
+from models import db
+from datetime import datetime
+
+
+class Setting(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text, nullable=False)
+    description = db.Column(db.String(500))
+    type = db.Column(db.String(20), default='text')  # text, number, boolean, json
+    is_public = db.Column(db.Boolean, default=False)  # Whether accessible via public API
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __repr__(self):
+        return f'<Setting {self.key}>'
+
+    @classmethod
+    def get_value(cls, key, default=None):
+        setting = cls.query.filter_by(key=key).first()
+        if not setting:
+            return default
+
+        # Convert value based on type
+        if setting.type == 'text':
+            return setting.value
+        elif setting.type == 'boolean':
+            return setting.value.lower() == 'true'
+        elif setting.type == 'number':
+            try:
+                return float(setting.value)
+            except:
+                return default
+        elif setting.type == 'json':
+            try:
+                return json.loads(setting.value)
+            except:
+                return default
+        return setting.value

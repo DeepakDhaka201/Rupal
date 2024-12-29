@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, current_app, request
 
 from auth.utils import token_required
+from models.models import Setting
 
 user_bp = Blueprint('user', __name__)
 
@@ -19,8 +20,8 @@ def get_profile(current_user):
                 'created_at': int(current_user.created_at.timestamp() * 1000)
             },
             'support': {
-                'email': current_app.config['SUPPORT_EMAIL'],
-                'telegram': current_app.config['SUPPORT_TELEGRAM'],
+                'email': Setting.get_value('support.email'),
+                'telegram': Setting.get_value('support.telegram'),
                 'hours': '10 AM - 6 PM IST'
             }
         }), 200
