@@ -1254,8 +1254,8 @@ def get_claims(current_user):
         # First get active transactions (claims)
         active_transactions = Transaction.query.filter(
             Transaction.user_id == current_user.id,
-            Transaction.transaction_type == TransactionType.BUY.name,
-            Transaction.status == TransactionStatus.PENDING.name
+            Transaction.transaction_type == TransactionType.BUY,
+            Transaction.status == TransactionStatus.PENDING
         ).all()
 
         active_claims = []
