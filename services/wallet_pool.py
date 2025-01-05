@@ -183,7 +183,7 @@ def cleanup_expired_claims():
                                 )
                               .with_for_update()
                               .all())
-            print(expired_claims)
+            print((Claim.query.filter(Claim.status == 'CLAIMED').with_for_update().all()))
 
             for claim in expired_claims:
                 print(f"Found active claim: {claim}")
