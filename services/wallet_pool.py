@@ -177,30 +177,24 @@ def cleanup_expired_claims():
             expiry_time_delta = int(Setting.get_value("claim.expiry_time_delta", 2))
 
             expired_claims = (Claim.query
-                              .filter(
-                                    Claim.status == 'CLAIMED',
-                                    Claim.expires_at + timedelta(minutes=expiry_time_delta) <= datetime.utcnow()
-                                )
+                              .filter(Claim.status == 'CLAIMED')
                               .with_for_update()
                               .all())
-            print(datetime.utcnow())
-            print((Claim.query.filter(Claim.status == 'CLAIMED').with_for_update().all()))
-            claim = Claim.query.get(5)
-            print(claim.expires_at + timedelta(minutes=expiry_time_delta) <= datetime.utcnow())
 
             for claim in expired_claims:
-                print(f"Found active claim: {claim}")
-                claim.status = 'AVAILABLE'
-                claim.claimed_by = None
-                claim.claimed_at = None
-                claim.expires_at = None
+                if claim.expires_at + timedelta(minutes=expiry_time_delta) <= datetime.utcnow():
+                    print(f"Found expired claim: {claim}")
+                    claim.status = 'AVAILABLE'
+                    claim.claimed_by = None
+                    claim.claimed_at = None
+                    claim.expires_at = None
 
-                # Update associated transaction if exists
-                transaction = Transaction.query.get(claim.id)
-                print(f"Found associated transaction: {transaction}")
-                if transaction and transaction.status == TransactionStatus.PENDING:
-                    transaction.status = TransactionStatus.CANCELLED
-                    transaction.error_message = 'Claim expired'
+                    # Update associated transaction if exists
+                    transaction = Transaction.query.get(claim.id)
+                    print(f"Found associated transaction: {transaction}")
+                    if transaction and transaction.status == TransactionStatus.PENDING:
+                        transaction.status = TransactionStatus.CANCELLED
+                        transaction.error_message = 'Claim expired'
 
             db.session.commit()
 
