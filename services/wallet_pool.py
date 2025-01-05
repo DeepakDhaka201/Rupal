@@ -183,6 +183,7 @@ def cleanup_expired_claims():
                                 )
                               .with_for_update()
                               .all())
+            print(datetime.utcnow())
             print((Claim.query.filter(Claim.status == 'CLAIMED').with_for_update().all()))
 
             for claim in expired_claims:
