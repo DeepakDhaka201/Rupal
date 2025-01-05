@@ -193,8 +193,10 @@ def cleanup_expired_claims():
                     transaction = Transaction.query.filter_by(claim_id=claim.id).first()
                     print(f"Found associated transaction: {transaction}")
                     if transaction and transaction.status == TransactionStatus.PENDING:
+                        print("Updating transaction status")
                         transaction.status = TransactionStatus.CANCELLED
                         transaction.error_message = 'Claim expired'
+
 
             db.session.commit()
 
