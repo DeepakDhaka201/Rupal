@@ -17,13 +17,15 @@
     <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="text-2xl font-bold text-blue-600">
-                PayOn
+                <img src="static/images/logo.png">
             </div>
-            <nav class="hidden md:flex space-x-6">
-                <a href="#support" class="text-gray-600 hover:text-blue-600">Contact Support</a>
-            </nav>
-            <button class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
+
+            <button class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors transform skew-x-12" onclick="{{ login_url }}">
                 Login
+            </button>
+
+            <button class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors transform skew-x-12" onclick="{{ signup_url }}">
+                Sign Up
             </button>
         </div>
     </header>
