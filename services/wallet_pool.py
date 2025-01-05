@@ -1,7 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import current_app
 
-from models.models import db, PooledWallet, WalletAssignment, Transaction, TransactionStatus, User, Claim
+from models.models import db, PooledWallet, WalletAssignment, Transaction, TransactionStatus, User, Claim, Setting
 from datetime import datetime, timedelta
 from transaction.utils import TransactionUtil
 import requests
@@ -174,15 +174,18 @@ def cleanup_expired_claims():
             current_app.logger.info(f"Checking claims")
             print("Checking Claims")
             # Find and lock expired claims
+            expiry_time_delta = int(Setting.get_value("claim.expiry_time_delta", 2))
+
             expired_claims = (Claim.query
                               .filter(
                                     Claim.status == 'CLAIMED',
-                                    Claim.expires_at + timedelta(minutes=2) <= datetime.utcnow()
+                                    Claim.expires_at + timedelta(minutes=expiry_time_delta) <= datetime.utcnow()
                                 )
                               .with_for_update()
                               .all())
 
             for claim in expired_claims:
+                print(f"Found active claim: {claim}")
                 claim.status = 'AVAILABLE'
                 claim.claimed_by = None
                 claim.claimed_at = None
@@ -190,6 +193,7 @@ def cleanup_expired_claims():
 
                 # Update associated transaction if exists
                 transaction = Transaction.query.get(claim.id)
+                print(f"Found associated transaction: {transaction}")
                 if transaction and transaction.status == TransactionStatus.PENDING:
                     transaction.status = TransactionStatus.CANCELLED
                     transaction.error_message = 'Claim expired'

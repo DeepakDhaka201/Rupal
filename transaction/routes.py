@@ -486,7 +486,10 @@ def initiate_buy2(current_user):
             claim.status = 'CLAIMED'
             claim.claimed_by = current_user.id
             claim.claimed_at = datetime.utcnow()
-            claim.expires_at = datetime.utcnow() + timedelta(minutes=30)
+
+            claim_expiry_time = int(Setting.get_value("claim.expiry_time", 30))
+
+            claim.expires_at = datetime.utcnow() + timedelta(minutes=claim_expiry_time)
 
             # Create transaction
             transaction = Transaction(
@@ -834,7 +837,9 @@ def initiate_deposit(current_user):
                 return jsonify({'error': 'No deposit addresses available'}), 503
 
             # Create new assignment
-            expires_at = datetime.utcnow() + timedelta(minutes=30)
+            expiry_time = int(Setting.get_value("wallet.expiry_time", 30))
+
+            expires_at = datetime.utcnow() + timedelta(minutes=expiry_time)
             assignment = WalletAssignment(
                 wallet_id=wallet.id,
                 user_id=current_user.id,
