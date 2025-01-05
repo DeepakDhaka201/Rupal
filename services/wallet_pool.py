@@ -190,7 +190,7 @@ def cleanup_expired_claims():
                     claim.expires_at = None
 
                     # Update associated transaction if exists
-                    transaction = Transaction.query.get(claim.id)
+                    transaction = Transaction.query.filter_by(claim_id=claim.id).first()
                     print(f"Found associated transaction: {transaction}")
                     if transaction and transaction.status == TransactionStatus.PENDING:
                         transaction.status = TransactionStatus.CANCELLED
