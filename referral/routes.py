@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from models.models import (
     db, User, ReferralCommission, ReferralEarning,
-    Transaction, TransactionStatus
+    Transaction, TransactionStatus, Setting
 )
 from auth.utils import token_required
 from datetime import datetime
@@ -40,9 +40,11 @@ def get_referral_info(current_user):
 
         rate = commission_rates[0] if commission_rates and len(commission_rates) > 0 else None
 
+        domain = Setting.get_value('domain', "https://payon.website")
+
         return jsonify({
             'referral_code': current_user.referral_code,
-            'referral_link': f"https://payon.website/signup?referralCode={current_user.referral_code}",
+            'referral_link': f"{domain}/signup?referralCode={current_user.referral_code}",
             'total_referrals': len(direct_referrals),
             'total_earnings': round(float(total_earnings), 2),
             'recent_earnings': [{

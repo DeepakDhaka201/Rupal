@@ -14,7 +14,7 @@ from sqlalchemy import and_
 from werkzeug.utils import secure_filename
 
 from models import db
-from models.models import User, ReferralCommission, TransactionType, ReferralEarning, PaymentMode, ExchangeRate
+from models.models import User, ReferralCommission, TransactionType, ReferralEarning, PaymentMode, ExchangeRate, Setting
 
 
 class TransactionUtil:
@@ -342,7 +342,7 @@ class TransactionUtil:
             if not os.path.exists(upload_dir):
                 os.makedirs(upload_dir)
 
-            domain = "https://payon.website/"
+            domain = Setting.get_value('domain', "https://payon.website")
             file_path = os.path.join(upload_dir, filename)
 
             if os.path.exists(file_path):
