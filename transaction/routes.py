@@ -132,6 +132,7 @@ def get_dashboard(current_user):
             "w_fee": Setting.get_value("withdrawal.fee", 3.00),
             "apk_url": Setting.get_value('apk.url'),
             "web_url": Setting.get_value('apk.web_url'),
+            "domain": Setting.get_value('domain', "https://payon.website"),
             "force_update": True if version < current_version else False
         }), 200
 
