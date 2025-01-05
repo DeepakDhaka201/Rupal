@@ -185,6 +185,8 @@ def cleanup_expired_claims():
                               .all())
             print(datetime.utcnow())
             print((Claim.query.filter(Claim.status == 'CLAIMED').with_for_update().all()))
+            claim = Claim.query.get(5)
+            print(claim.expires_at + timedelta(minutes=expiry_time_delta) <= datetime.utcnow())
 
             for claim in expired_claims:
                 print(f"Found active claim: {claim}")
