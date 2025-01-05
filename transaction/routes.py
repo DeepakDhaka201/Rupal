@@ -48,7 +48,7 @@ def get_dashboard(current_user):
                     'claim': {
                         'id': claim.id,
                         'status': claim.status,
-                        'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds()) * 1000,
+                        'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds()) * 1000 if claim.expires_at else -1,
                         'expires_at': claim.expires_at,
                         'account_name': claim.account_holder,
                         'account_number': claim.account_number,
