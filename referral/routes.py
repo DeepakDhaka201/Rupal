@@ -42,7 +42,7 @@ def get_referral_info(current_user):
 
         return jsonify({
             'referral_code': current_user.referral_code,
-            'referral_link': f"https://payon.website/signup?referral_code={current_user.referral_code}",
+            'referral_link': f"https://payon.website/signup?referralCode={current_user.referral_code}",
             'total_referrals': len(direct_referrals),
             'total_earnings': round(float(total_earnings), 2),
             'recent_earnings': [{
