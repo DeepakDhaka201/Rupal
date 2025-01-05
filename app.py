@@ -19,6 +19,7 @@ import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from services.wallet_pool import cleanup_expired_claims, DepositMonitor
+from web.routes import web_bp
 
 
 def setup_logging(app):
@@ -112,7 +113,8 @@ def create_app(config_class=Config):
         (transaction_bp, '/api/v1/transaction'),
         (bank_bp, '/api/v1/bank'),
         (referral_bp, '/api/v1/referral'),
-        (user_bp, '/api/v1/user')
+        (user_bp, '/api/v1/user'),
+        (web_bp, '/')
     ]
 
     # Admin routes
