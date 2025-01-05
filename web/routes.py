@@ -10,4 +10,6 @@ def index():
     return render_template('index.html',
                            apk_url=Setting.get_value('apk.url'),
                            telegram=Setting.get_value('support.telegram	'),
+                           login_url=f"{Setting.get_value('domain')}/login",
+                           signup_url=f"{Setting.get_value('domain')}/signup"
                            )
