@@ -521,6 +521,7 @@ def initiate_buy2(current_user):
                 'claim': {
                     'id': claim.id,
                     'status': claim.status,
+                    'expires_at': claim.expires_at,
                     'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds()) * 1000,
                     'account_name': claim.account_holder,
                     'account_number': claim.account_number,
@@ -561,6 +562,7 @@ def active_buy_transactions(current_user):
                 'claim': {
                     'id': claim.id,
                     'status': claim.status,
+                    'expires_at': claim.expires_at,
                     'expire_after': int((claim.expires_at - datetime.utcnow()).total_seconds()) * 1000,
                     'account_name': claim.account_holder,
                     'account_number': claim.account_number,
