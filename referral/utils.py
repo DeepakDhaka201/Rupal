@@ -1,6 +1,6 @@
 from flask import current_app
 
-from models import User
+from models.models import User
 
 
 def get_referral_tree(user_id, level=1, max_levels=None):
