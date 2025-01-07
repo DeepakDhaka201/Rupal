@@ -901,7 +901,7 @@ def check_deposit_status(current_user):
             'transaction_detected': bool(transaction),
             'transaction': {
                 "rupal_id": transaction.rupal_id,
-                "status": transaction.status,
+                "status": transaction.status.value,
                 "title": TransactionUtil.get_transaction_title(transaction.transaction_type.value),
                 "display_status": TransactionUtil.get_status_display(transaction.status.value),
                 "amount_usdt": transaction.amount_usdt,
