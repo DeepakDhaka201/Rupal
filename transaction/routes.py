@@ -883,9 +883,9 @@ def check_deposit_status(current_user):
         # Get assignment with lock
         assignment = (WalletAssignment.query
                       .filter_by(
-            id=assignment_id,
-            user_id=current_user.id
-        )
+                                id=assignment_id,
+                                 user_id=current_user.id
+                      )
                       .with_for_update()
                       .first_or_404())
 
