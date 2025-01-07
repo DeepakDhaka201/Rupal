@@ -76,17 +76,21 @@ class DepositMonitor:
         try:
             # Check basic transaction validity
             if txn.get('confirmations', 0) < current_app.config['MIN_CONFIRMATIONS']:
+                current_app.logger.error(f"Not valid transaction as required confirmations are low")
                 return False
 
             if txn.get('contract_address') != self.usdt_contract:
+                current_app.logger.error(f"Not valid transaction as token not matching")
                 return False
 
             # Verify transaction timestamp against assignment
             txn_timestamp = datetime.fromtimestamp(txn['block_timestamp'] / 1000)
             if txn_timestamp < assignment.assigned_at:
+                current_app.logger.error(f"Not valid transaction as transaction happened before assignment")
                 return False
 
             if txn_timestamp > assignment.expires_at:
+                current_app.logger.error(f"Not valid transaction as transaction happened after expiry")
                 return False
 
             return True
