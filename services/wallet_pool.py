@@ -15,14 +15,13 @@ class DepositMonitor:
     def monitor_active_assignments(self):
         try:
             current_app.logger.info(f"Checking wallets")
-            print("Checking wallets")
             # Get both active and expired assignments
             assignments = (WalletAssignment.query
-                           .filter(
-                WalletAssignment.is_active == True
-            )
+                           .filter(WalletAssignment.is_active == True)
                            .with_for_update()
                            .all())
+
+            current_app.logger.info(f"Found assignment to check : {assignments}")
 
             for assignment in assignments:
                 self._check_assignment(assignment)
@@ -43,13 +42,17 @@ class DepositMonitor:
                 assignment.assigned_at
             )
 
+            current_app.logger.info(f"Blockchain Transactions Fetched : {blockchain_txns}")
+
             for txn in blockchain_txns:
                 # Skip if transaction already processed
                 if Transaction.query.filter_by(blockchain_txn_id=txn['hash']).first():
+                    current_app.logger.info(f"Blockchain Transaction already processed : {txn}")
                     continue
 
                 # Verify transaction
                 if not self._verify_transaction(txn, assignment):
+                    current_app.logger.info(f"Blockchain Transaction not verified : {txn}")
                     continue
 
                 # Create transaction and credit user
@@ -90,6 +93,7 @@ class DepositMonitor:
             return False
 
     def _process_transaction(self, assignment, txn):
+        current_app.logger.info(f"Blockchain Transaction Detected : {txn}")
         try:
             amount_usdt = float(txn['value']) / 1e6
 
@@ -139,6 +143,8 @@ class DepositMonitor:
 
     def _handle_expired_assignment(self, assignment):
         """Handle expired assignment with final check"""
+        current_app.logger.info(f"Assignment Expired, Verifying with Tron : {assignment}")
+
         try:
             # One final check with grace period
             grace_period = datetime.utcnow() + timedelta(minutes=5)
@@ -159,6 +165,7 @@ class DepositMonitor:
                             return
 
             # No valid transaction found, release the wallet
+            current_app.logger.info(f"No valid transaction found, release the wallet : {assignment}")
             assignment.is_active = False
             assignment.wallet.status = 'AVAILABLE'
             db.session.commit()
