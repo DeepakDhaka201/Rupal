@@ -75,9 +75,9 @@ class DepositMonitor:
     def _verify_transaction(self, txn, assignment):
         try:
             # Check basic transaction validity
-            if txn.get('confirmations', 0) < current_app.config['MIN_CONFIRMATIONS']:
-                current_app.logger.error(f"Not valid transaction as required confirmations are low")
-                return False
+            # if txn.get('confirmations', 0) < current_app.config['MIN_CONFIRMATIONS']:
+            #     current_app.logger.error(f"Not valid transaction as required confirmations are low")
+            #     return False
 
             if txn.get('contract_address') != self.usdt_contract:
                 current_app.logger.error(f"Not valid transaction as token not matching")
