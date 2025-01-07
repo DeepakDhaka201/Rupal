@@ -178,8 +178,6 @@ class DepositMonitor:
 def cleanup_expired_claims():
     try:
         with db.session.begin_nested():
-            current_app.logger.info(f"Checking claims")
-            print("Checking Claims")
             # Find and lock expired claims
             expiry_time_delta = int(Setting.get_value("claim.expiry_time_delta", 2))
 
