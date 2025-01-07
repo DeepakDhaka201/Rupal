@@ -113,6 +113,8 @@ class DepositMonitor:
                 status='COMPLETED',
                 amount_usdt=round(amount_usdt, 2),
                 blockchain_txn_id=txn['transaction_id'],
+                from_address=txn["from"],
+                to_address=txn["to"],
                 created_at=datetime.utcnow()
             )
             db.session.add(transaction)
