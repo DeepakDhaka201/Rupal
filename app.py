@@ -57,7 +57,7 @@ def setup_schedulers(app):
     wallet_scheduler.add_job(
         monitor_with_context,
         'interval',
-        seconds=5,
+        seconds=20,
         max_instances=1
     )
 
