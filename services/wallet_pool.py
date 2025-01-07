@@ -1,3 +1,5 @@
+import traceback
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import current_app
 
@@ -67,6 +69,7 @@ class DepositMonitor:
 
         except Exception as e:
             db.session.rollback()
+            traceback.print_exc()
             current_app.logger.error(f"Check assignment error: {str(e)}")
 
     def _verify_transaction(self, txn, assignment):
@@ -89,6 +92,7 @@ class DepositMonitor:
             return True
 
         except Exception as e:
+            traceback.print_exc()
             current_app.logger.error(f"Verify transaction error: {str(e)}")
             return False
 
@@ -120,6 +124,7 @@ class DepositMonitor:
 
         except Exception as e:
             db.session.rollback()
+            traceback.print_exc()
             current_app.logger.error(f"Process transaction error: {str(e)}")
 
     def _get_blockchain_transactions(self, address, start_time):
