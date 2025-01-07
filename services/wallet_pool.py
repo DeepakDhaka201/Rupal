@@ -48,7 +48,7 @@ class DepositMonitor:
 
             for txn in blockchain_txns:
                 # Skip if transaction already processed
-                if Transaction.query.filter_by(blockchain_txn_id=txn['hash']).first():
+                if Transaction.query.filter_by(blockchain_txn_id=txn['transaction_id']).first():
                     current_app.logger.info(f"Blockchain Transaction already processed : {txn}")
                     continue
 
@@ -82,7 +82,7 @@ class DepositMonitor:
                 return False
 
             # Verify transaction timestamp against assignment
-            txn_timestamp = datetime.fromtimestamp(txn['timestamp'] / 1000)
+            txn_timestamp = datetime.fromtimestamp(txn['block_timestamp'] / 1000)
             if txn_timestamp < assignment.assigned_at:
                 return False
 
@@ -107,7 +107,7 @@ class DepositMonitor:
                 transaction_type='DEPOSIT',
                 status='COMPLETED',
                 amount_usdt=round(amount_usdt, 2),
-                blockchain_txn_id=txn['hash'],
+                blockchain_txn_id=txn['transaction_id'],
                 created_at=datetime.utcnow()
             )
             db.session.add(transaction)
@@ -160,11 +160,11 @@ class DepositMonitor:
 
             # Check transactions one last time
             for txn in blockchain_txns:
-                txn_timestamp = datetime.fromtimestamp(txn['timestamp'] / 1000)
+                txn_timestamp = datetime.fromtimestamp(txn['block_timestamp'] / 1000)
 
                 # Only process if transaction was made during assignment period
                 if assignment.assigned_at <= txn_timestamp <= assignment.expires_at:
-                    if not Transaction.query.filter_by(blockchain_txn_id=txn['hash']).first():
+                    if not Transaction.query.filter_by(blockchain_txn_id=txn['transaction_id']).first():
                         if self._verify_transaction(txn, assignment):
                             self._process_transaction(assignment, txn)
                             return
@@ -177,6 +177,7 @@ class DepositMonitor:
 
         except Exception as e:
             db.session.rollback()
+            traceback.print_exc()
             current_app.logger.error(f"Handle expired assignment error: {str(e)}")
 
 
