@@ -106,6 +106,7 @@ class DepositMonitor:
             amount_usdt = float(txn['value']) / 1e6
 
             transaction = Transaction(
+                rupal_id=TransactionUtil.generate_transaction_ref(),
                 user_id=assignment.user_id,
                 wallet_assignment_id=assignment.id,
                 transaction_type='DEPOSIT',
