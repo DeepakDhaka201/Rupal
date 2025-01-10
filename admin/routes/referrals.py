@@ -103,7 +103,7 @@ def edit_commission(current_user, commission_id):
         return jsonify({'success': False, 'message': 'Invalid values provided'}), 400
 
 
-@referral_admin_bp.route('/commissions/<int:commission_id> ', methods=['GET'])
+@referral_admin_bp.route('/commissions/<int:commission_id>/ ', methods=['GET'])
 @admin_required
 def get_commission(current_user, commission_id):
     commission = ReferralCommission.query.get_or_404(commission_id)
