@@ -85,7 +85,7 @@ def add_commission(current_user):
         return redirect(url_for('admin_referral.commission_rates'))
 
 
-@referral_admin_bp.route('/commissions/<int:commission_id>/edit', methods=['POST'])
+@referral_admin_bp.route('/commissions/<int:commission_id>/edit ', methods=['POST'])
 @admin_required
 def edit_commission(current_user, commission_id):
     commission = ReferralCommission.query.get_or_404(commission_id)
@@ -98,6 +98,26 @@ def edit_commission(current_user, commission_id):
 
         db.session.commit()
         return jsonify({'success': True})
+
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid values provided'}), 400
+
+
+@referral_admin_bp.route('/commissions/<int:commission_id> ', methods=['GET'])
+@admin_required
+def get_commission(current_user, commission_id):
+    commission = ReferralCommission.query.get_or_404(commission_id)
+
+    try:
+        data = {
+            "id": commission.id,
+            "level": commission.level,
+            "buy_commission_percent": commission.buy_commission_percent,
+            "sell_commission_percent": commission.sell_commission_percent,
+            "is_active": commission.is_active,
+            "min_amount_usdt": commission.min_amount_usdt,
+        }
+        return jsonify(data), 200
 
     except ValueError:
         return jsonify({'success': False, 'message': 'Invalid values provided'}), 400
