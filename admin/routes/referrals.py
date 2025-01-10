@@ -6,7 +6,7 @@ from models.models import db, User, ReferralCommission, ReferralEarning, Transac
 from sqlalchemy import func
 from datetime import datetime, timedelta
 
-referral_admin_bp = Blueprint('admin_referral', __name__, url_prefix='/admin/referrals')
+referral_admin_bp = Blueprint('admin_referral', __name__)
 
 
 @referral_admin_bp.route('/')
