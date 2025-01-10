@@ -141,7 +141,7 @@ def update_transaction_status(transaction_id):
                 if transaction.transaction_type == TransactionType.BUY:
                     transaction.user.wallet_balance += transaction.amount_usdt
                     process_referral_earnings(transaction, "buy")
-                else:
+                elif transaction.transaction_type == TransactionType.SELL:
                     process_referral_earnings(transaction, "sell")
 
             elif new_status == 'CANCELLED':
