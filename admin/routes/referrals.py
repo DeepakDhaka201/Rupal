@@ -85,7 +85,7 @@ def add_commission(current_user):
         return redirect(url_for('admin_referral.commission_rates'))
 
 
-@referral_admin_bp.route('/commissions/<int:commission_id>/edit ', methods=['POST'])
+@referral_admin_bp.route('/commissions/<int:commission_id>/edit', methods=['POST'])
 @admin_required
 def edit_commission(current_user, commission_id):
     commission = ReferralCommission.query.get_or_404(commission_id)
@@ -103,7 +103,7 @@ def edit_commission(current_user, commission_id):
         return jsonify({'success': False, 'message': 'Invalid values provided'}), 400
 
 
-@referral_admin_bp.route('/commissions/<int:commission_id>/ ', methods=['GET'])
+@referral_admin_bp.route('/commissions/<int:commission_id>', methods=['GET'])
 @admin_required
 def get_commission(current_user, commission_id):
     commission = ReferralCommission.query.get_or_404(commission_id)
