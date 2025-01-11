@@ -49,7 +49,7 @@ def get_referral_info(current_user):
             'total_earnings': round(float(total_earnings), 2),
             'recent_earnings': [{
                 'id': earning.id,
-                'amount_usdt': earning.amount_usdt,
+                'amount_usdt': round(earning.amount_usdt, 2),
                 'commission_percent': earning.commission_percent,
                 'level': earning.referral_level,
                 'transaction_type': earning.transaction.transaction_type.value,
