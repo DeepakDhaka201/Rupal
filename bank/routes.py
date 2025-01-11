@@ -63,8 +63,6 @@ def add_account(current_user):
             return jsonify({'error': 'All fields are required'}), 400
 
         # Validate IFSC code format
-        if not re.match(r'^[A-Z]{4}0[A-Z0-9]{6}$', data['ifsc_code']):
-            return jsonify({'error': 'Invalid IFSC code format'}), 400
 
         # Check if account already exists
         existing_account = BankAccount.query.filter_by(
