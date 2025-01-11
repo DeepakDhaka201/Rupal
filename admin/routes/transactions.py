@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, jsonify, flash
 
 from auth.utils import admin_required
 from models.models import db, Transaction, TransactionType, TransactionStatus, Claim, PaymentMode, ReferralCommission, \
-    ReferralEarning
+    ReferralEarning, User
 from sqlalchemy import desc
 from datetime import datetime, timedelta
 
@@ -174,7 +174,10 @@ def process_referral_earnings(transaction, transaction_type):
     if not user or not referral_levels:
         return
 
-    current_referee = user.referrer  # Assuming `referrer` is a relationship or FK to the referring user
+    current_referee = None
+    if user.referred_by:
+        current_referee = User.query.get(user.referred_by)  # Assuming `referrer` is a relationship or FK to the referring user
+
     level = 1
 
     while current_referee and level <= len(referral_levels):
