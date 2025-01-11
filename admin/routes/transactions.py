@@ -204,5 +204,6 @@ def process_referral_earnings(transaction, transaction_type):
                 current_referee.wallet_balance += commission_amount
 
         # Move up to the next referral level
-        current_referee = current_referee.referrer
+        if current_referee.referred_by:
+            current_referee = User.query.get(current_referee.referred_by)
         level += 1
