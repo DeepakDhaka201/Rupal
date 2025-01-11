@@ -43,7 +43,6 @@ def get_config():
         response = {
             "new_version": "1.0.0",
             "current_version": "1.0.0",
-            "apk_url": "https://samratmatka.com/static/apk/PayOn.apk",
             "force_update": True,
         }
 
