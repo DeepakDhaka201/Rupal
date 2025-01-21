@@ -951,7 +951,7 @@ def initiate_withdraw(current_user):
             return jsonify({'error': 'All fields are required'}), 400
 
         amount_usdt = float(data['amount_usdt'])
-        fee = current_app.config['WITHDRAWAL_FEE']
+        fee = int(Setting.get_value("withdrawal.fee", 3.00)),
         total_amount = amount_usdt + fee
 
         # Validations
