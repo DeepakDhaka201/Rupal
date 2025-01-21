@@ -629,7 +629,7 @@ def confirm_buy(current_user):
     try:
         transaction_id = request.form.get('transaction_id')
         ref_number = request.form.get('ref_number')
-        if not transaction_id or 'payment_proof' not in request.files or not ref_number:
+        if not transaction_id or 'payment_proof' not in request.files:
             return jsonify({'error': 'All fields are required'}), 400
 
         transaction = Transaction.query.filter_by(
