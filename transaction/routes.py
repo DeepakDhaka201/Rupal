@@ -951,8 +951,10 @@ def initiate_withdraw(current_user):
             return jsonify({'error': 'All fields are required'}), 400
 
         amount_usdt = float(data['amount_usdt'])
-        fee = int(Setting.get_value("withdrawal.fee", 3.00)),
-        total_amount = amount_usdt + fee
+        fee = Setting.get_value("withdrawal.fee", 3.00),
+        print(fee)
+        print(fee.__class__)
+        total_amount = amount_usdt + float(fee)
 
         # Validations
         if not current_user.check_wallet_pin(data['wallet_pin']):
